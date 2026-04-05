@@ -54,9 +54,6 @@ html, body {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.8s ease;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
 }
 .screen.active {
   opacity: 1;
@@ -192,8 +189,9 @@ html, body {
 /* ============ CHARACTER SELECT ============ */
 #character-screen {
   background: radial-gradient(ellipse at 50% 30%, #1a1035 0%, #0a0a1a 70%);
-  justify-content: flex-start;
+  justify-content: stretch;
   align-items: stretch;
+  overflow: hidden;
   padding: 0;
 }
 
@@ -201,11 +199,20 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   width: 100%;
-  min-height: 100%;
+  flex: 1;
   padding: 40px 16px 60px;
   overflow-y: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+}
+
+/* When content is taller than viewport, don't center — start from top */
+@supports (overflow-y: auto) {
+  .screen-scroll-inner {
+    justify-content: safe center;
+  }
 }
 
 .char-header {
@@ -862,11 +869,12 @@ html, body {
 
   /* Character screen: full scroll */
   #character-screen {
-    justify-content: flex-start;
+    overflow: hidden;
   }
 
   .screen-scroll-inner {
-    padding: 24px 12px 80px;
+    justify-content: flex-start;
+    padding: 24px 12px 100px;
   }
 
   .char-header {
