@@ -189,9 +189,10 @@ html, body {
 /* ============ CHARACTER SELECT ============ */
 #character-screen {
   background: radial-gradient(ellipse at 50% 30%, #1a1035 0%, #0a0a1a 70%);
-  justify-content: stretch;
-  align-items: stretch;
-  overflow: hidden;
+  display: block;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
   padding: 0;
 }
 
@@ -199,20 +200,16 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   width: 100%;
-  flex: 1;
-  padding: 40px 16px 60px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
+  min-height: 100%;
+  padding: 40px 16px;
+  /* margin auto on flex child = centering when space available, top-aligned when overflow */
 }
 
-/* When content is taller than viewport, don't center — start from top */
-@supports (overflow-y: auto) {
-  .screen-scroll-inner {
-    justify-content: safe center;
-  }
+.screen-scroll-inner::before,
+.screen-scroll-inner::after {
+  content: '';
+  flex: 1 0 40px;
 }
 
 .char-header {
@@ -868,13 +865,11 @@ html, body {
   }
 
   /* Character screen: full scroll */
-  #character-screen {
-    overflow: hidden;
+  .screen-scroll-inner::before {
+    flex: 0 0 10px;
   }
-
-  .screen-scroll-inner {
-    justify-content: flex-start;
-    padding: 24px 12px 100px;
+  .screen-scroll-inner::after {
+    flex: 0 0 60px;
   }
 
   .char-header {
