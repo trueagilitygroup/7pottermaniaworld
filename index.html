@@ -1,0 +1,2062 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta property="og:title" content="7PotterManiaWorld — 魔法世界冒險">
+<meta property="og:description" content="選擇你的學院，學習咒語，探索霍格華茲！一款沉浸式魔法世界網頁冒險遊戲。">
+<meta property="og:type" content="website">
+<title>7PotterManiaWorld — 魔法世界冒險</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&family=Noto+Serif+TC:wght@400;600;700;900&family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --gold: #d4a843;
+  --gold-light: #f0d078;
+  --gold-dark: #a07830;
+  --parchment: #f5e6c8;
+  --parchment-dark: #d4c4a0;
+  --ink: #1a0e05;
+  --crimson: #8b1a1a;
+  --emerald: #1a5c3a;
+  --ravenclaw: #1a3a6c;
+  --hufflepuff: #c8a820;
+  --midnight: #0a0a1a;
+  --purple-glow: #6a3abc;
+  --blue-glow: #3a7bdc;
+  --castle-stone: #4a4a5a;
+  --castle-dark: #2a2a3a;
+}
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  font-family: 'Noto Sans TC', sans-serif;
+  background: var(--midnight);
+  color: var(--parchment);
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ============ STARFIELD CANVAS ============ */
+#starfield {
+  position: fixed; inset: 0;
+  z-index: 0;
+}
+
+/* ============ SCREEN MANAGEMENT ============ */
+.screen {
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 10;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.8s ease;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+.screen.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* ============ TITLE SCREEN ============ */
+#title-screen {
+  background: linear-gradient(180deg, #050510 0%, #0f0f2a 30%, #1a1035 60%, #0a0a1a 100%);
+}
+
+.title-castle {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 55%;
+  overflow: hidden;
+}
+
+.castle-silhouette {
+  position: absolute;
+  bottom: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 120%;
+  max-width: 1200px;
+}
+
+.castle-silhouette svg {
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 0 40px rgba(106, 58, 188, 0.3));
+}
+
+.title-content {
+  position: relative;
+  z-index: 5;
+  text-align: center;
+  margin-top: -10vh;
+}
+
+.title-badge {
+  display: inline-block;
+  font-family: 'Noto Serif TC', serif;
+  font-size: clamp(11px, 1.5vw, 15px);
+  letter-spacing: 0.4em;
+  color: var(--gold);
+  border: 1px solid var(--gold-dark);
+  padding: 6px 24px;
+  margin-bottom: 20px;
+  opacity: 0;
+  animation: fadeDown 1s 0.5s ease forwards;
+}
+
+.game-title {
+  font-family: 'Cinzel Decorative', serif;
+  font-weight: 900;
+  font-size: clamp(26px, 5.5vw, 68px);
+  line-height: 1.1;
+  background: linear-gradient(180deg, var(--gold-light) 0%, var(--gold) 40%, var(--gold-dark) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 2px 8px rgba(212, 168, 67, 0.4));
+  margin-bottom: 8px;
+  opacity: 0;
+  animation: fadeUp 1.2s 0.8s ease forwards;
+}
+
+.game-subtitle {
+  font-family: 'Noto Serif TC', serif;
+  font-size: clamp(14px, 2.2vw, 22px);
+  letter-spacing: 0.3em;
+  color: var(--gold-dark);
+  font-weight: 700;
+  opacity: 0;
+  animation: fadeUp 1s 1.2s ease forwards;
+}
+
+.title-actions {
+  margin-top: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: center;
+  opacity: 0;
+  animation: fadeUp 1s 1.8s ease forwards;
+}
+
+/* ============ BUTTONS ============ */
+.btn-magic {
+  position: relative;
+  font-family: 'Noto Serif TC', serif;
+  font-weight: 700;
+  font-size: clamp(13px, 1.8vw, 16px);
+  letter-spacing: 0.15em;
+  color: var(--gold);
+  background: linear-gradient(135deg, rgba(212,168,67,0.12) 0%, rgba(212,168,67,0.05) 100%);
+  border: 1.5px solid var(--gold-dark);
+  padding: 14px 48px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.4s ease;
+  min-width: 240px;
+}
+
+.btn-magic::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(212,168,67,0.2), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+}
+
+.btn-magic:hover {
+  background: linear-gradient(135deg, rgba(212,168,67,0.25) 0%, rgba(212,168,67,0.1) 100%);
+  border-color: var(--gold);
+  box-shadow: 0 0 30px rgba(212,168,67,0.2), inset 0 0 20px rgba(212,168,67,0.1);
+  transform: translateY(-2px);
+}
+
+.btn-magic:hover::before {
+  transform: translateX(100%);
+}
+
+.btn-secondary {
+  background: transparent;
+  border-color: rgba(212,168,67,0.3);
+  color: var(--gold-dark);
+  padding: 10px 36px;
+  font-size: clamp(11px, 1.4vw, 13px);
+}
+
+/* ============ CHARACTER SELECT ============ */
+#character-screen {
+  background: radial-gradient(ellipse at 50% 30%, #1a1035 0%, #0a0a1a 70%);
+  justify-content: flex-start;
+  padding: 40px 0;
+  padding-top: max(40px, env(safe-area-inset-top, 40px));
+  padding-bottom: max(40px, env(safe-area-inset-bottom, 40px));
+}
+
+.char-header {
+  font-family: 'Noto Serif TC', serif;
+  font-weight: 900;
+  font-size: clamp(22px, 3.5vw, 38px);
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+
+.char-sub {
+  font-family: 'Noto Sans TC', sans-serif;
+  font-size: clamp(11px, 1.5vw, 14px);
+  color: var(--gold-dark);
+  letter-spacing: 0.3em;
+  margin-bottom: 30px;
+}
+
+.house-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  max-width: 840px;
+  width: 90%;
+  margin-bottom: 30px;
+}
+
+.house-card {
+  position: relative;
+  border: 1.5px solid rgba(255,255,255,0.1);
+  padding: 24px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.4s ease;
+  background: rgba(255,255,255,0.03);
+  overflow: hidden;
+}
+
+.house-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--house-color);
+  transform: scaleX(0);
+  transition: transform 0.4s ease;
+}
+
+.house-card:hover::before,
+.house-card.selected::before {
+  transform: scaleX(1);
+}
+
+.house-card:hover {
+  border-color: var(--house-color);
+  background: rgba(255,255,255,0.06);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+
+.house-card.selected {
+  border-color: var(--house-color);
+  background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, transparent 100%);
+  box-shadow: 0 0 40px color-mix(in srgb, var(--house-color) 30%, transparent);
+}
+
+.house-crest {
+  font-size: 40px;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.house-name {
+  font-family: 'Noto Serif TC', serif;
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--house-color);
+  margin-bottom: 2px;
+}
+
+.house-name-en {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  color: rgba(245,230,200,0.4);
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+}
+
+.house-trait {
+  font-family: 'Noto Sans TC', sans-serif;
+  font-size: 13px;
+  color: rgba(245,230,200,0.6);
+}
+
+.house-stats {
+  margin-top: 12px;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  font-size: 11px;
+  color: rgba(245,230,200,0.5);
+}
+
+.house-stats span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.house-stats .stat-val {
+  color: var(--house-color);
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+/* Name input */
+.name-input-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.name-input-area label {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 15px;
+  color: var(--gold-dark);
+  letter-spacing: 0.1em;
+}
+
+.name-input-area input {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 16px;
+  color: var(--gold);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--gold-dark);
+  padding: 10px 20px;
+  outline: none;
+  width: 220px;
+  transition: all 0.3s ease;
+}
+
+.name-input-area input:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 20px rgba(212,168,67,0.15);
+}
+
+.name-input-area input::placeholder {
+  color: rgba(212,168,67,0.3);
+}
+
+/* ============ GAME SCREEN ============ */
+#game-screen {
+  flex-direction: row;
+  background: #0a0a1a;
+}
+
+.game-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr 240px;
+  grid-template-rows: 56px 1fr 80px;
+  width: 100%; height: 100%;
+  gap: 0;
+}
+
+/* Top Bar */
+.top-bar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  background: linear-gradient(180deg, rgba(10,10,26,0.98) 0%, rgba(10,10,26,0.9) 100%);
+  border-bottom: 1px solid rgba(212,168,67,0.15);
+  z-index: 20;
+}
+
+.top-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.logo-mini {
+  font-family: 'Cinzel Decorative', serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--gold);
+  letter-spacing: 0.05em;
+}
+
+.location-name {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--parchment-dark);
+  padding-left: 16px;
+  border-left: 1px solid rgba(212,168,67,0.2);
+}
+
+.top-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.resource-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Noto Sans TC', sans-serif;
+  font-size: 13px;
+}
+
+.resource-icon { font-size: 16px; }
+
+.resource-val {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.resource-label {
+  color: rgba(245,230,200,0.4);
+  font-size: 11px;
+}
+
+/* Left Panel */
+.left-panel {
+  background: linear-gradient(90deg, rgba(10,10,26,0.97) 0%, rgba(10,10,26,0.92) 100%);
+  border-right: 1px solid rgba(212,168,67,0.1);
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.panel-section-title {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--gold-dark);
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(212,168,67,0.1);
+}
+
+.player-card {
+  text-align: center;
+  padding: 12px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.player-avatar {
+  width: 64px; height: 64px;
+  margin: 0 auto 8px;
+  border-radius: 50%;
+  border: 2px solid var(--gold-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  background: rgba(255,255,255,0.03);
+}
+
+.player-name {
+  font-family: 'Noto Serif TC', serif;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--gold);
+}
+
+.player-house-label {
+  font-size: 12px;
+  color: var(--parchment-dark);
+}
+
+.player-level {
+  margin-top: 8px;
+  font-family: 'Noto Sans TC', sans-serif;
+  font-size: 11px;
+  color: var(--gold-dark);
+}
+
+.xp-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(255,255,255,0.05);
+  margin-top: 4px;
+  overflow: hidden;
+}
+
+.xp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold-dark), var(--gold));
+  transition: width 0.5s ease;
+}
+
+/* Stats */
+.stat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+
+.stat-name { color: var(--parchment-dark); }
+
+.stat-value {
+  font-weight: 700;
+  color: var(--gold);
+}
+
+/* Spells */
+.spell-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.spell-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  font-size: 12px;
+  border: 1px solid rgba(255,255,255,0.05);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: rgba(255,255,255,0.02);
+}
+
+.spell-item:hover {
+  border-color: var(--purple-glow);
+  background: rgba(106, 58, 188, 0.1);
+}
+
+.spell-icon { font-size: 16px; }
+
+.spell-name {
+  color: var(--parchment);
+  font-family: 'Noto Sans TC', sans-serif;
+  font-weight: 500;
+}
+
+.spell-name-latin {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  color: rgba(245,230,200,0.4);
+}
+
+.spell-cost {
+  margin-left: auto;
+  color: var(--blue-glow);
+  font-size: 11px;
+}
+
+/* Center Scene */
+.center-scene {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.scene-viewport {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.scene-bg {
+  position: absolute; inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scene-art {
+  width: 100%; height: 100%;
+}
+
+.scene-narrative {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: linear-gradient(0deg, rgba(10,10,26,0.95) 0%, rgba(10,10,26,0.8) 60%, transparent 100%);
+  padding: 60px 24px 20px;
+  max-height: 70%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.narrative-text {
+  font-family: 'Noto Serif TC', serif;
+  font-size: clamp(14px, 1.6vw, 17px);
+  line-height: 1.9;
+  color: var(--parchment);
+  max-width: 700px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.narrative-text .highlight {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.scene-choices {
+  padding: 12px 20px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  background: rgba(10,10,26,0.95);
+  border-top: 1px solid rgba(212,168,67,0.1);
+  min-height: 70px;
+  align-items: center;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  flex-shrink: 0;
+}
+
+.choice-btn {
+  font-family: 'Noto Sans TC', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: var(--parchment);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(212,168,67,0.2);
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  max-width: 280px;
+}
+
+.choice-btn:hover {
+  border-color: var(--gold);
+  background: rgba(212,168,67,0.1);
+  color: var(--gold);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(212,168,67,0.15);
+}
+
+.choice-btn .choice-key {
+  display: inline-block;
+  margin-right: 8px;
+  font-size: 14px;
+}
+
+/* Right Panel */
+.right-panel {
+  background: linear-gradient(270deg, rgba(10,10,26,0.97) 0%, rgba(10,10,26,0.92) 100%);
+  border-left: 1px solid rgba(212,168,67,0.1);
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.inv-slot {
+  aspect-ratio: 1;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  cursor: default;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.inv-slot.has-item { cursor: pointer; }
+
+.inv-slot.has-item:hover {
+  border-color: var(--gold-dark);
+  background: rgba(212,168,67,0.08);
+}
+
+.inv-slot .inv-count {
+  position: absolute;
+  bottom: 2px; right: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+/* Quest Log */
+.quest-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quest-item {
+  padding: 8px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.02);
+}
+
+.quest-title {
+  font-family: 'Noto Serif TC', serif;
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--gold);
+  margin-bottom: 4px;
+}
+
+.quest-desc {
+  font-size: 11px;
+  color: var(--parchment-dark);
+  line-height: 1.5;
+}
+
+.quest-progress {
+  width: 100%;
+  height: 3px;
+  background: rgba(255,255,255,0.05);
+  margin-top: 6px;
+}
+
+.quest-progress-fill {
+  height: 100%;
+  background: var(--emerald);
+  transition: width 0.5s ease;
+}
+
+/* Bottom Bar */
+.bottom-bar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 20px;
+  background: rgba(10,10,26,0.98);
+  border-top: 1px solid rgba(212,168,67,0.1);
+}
+
+.log-entry {
+  font-size: 13px;
+  color: var(--parchment-dark);
+  text-align: center;
+}
+
+.log-entry .log-time {
+  color: var(--gold-dark);
+  font-size: 10px;
+  margin-right: 8px;
+}
+
+/* ============ SCENE SVG ART ============ */
+.scene-art svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* ============ ANIMATIONS ============ */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Spell cast effect */
+.spell-flash {
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse at center, rgba(106,58,188,0.4) 0%, transparent 70%);
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.spell-flash.active { opacity: 1; }
+
+/* Toast */
+.toast {
+  position: fixed;
+  top: 70px; left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  font-family: 'Noto Serif TC', serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gold);
+  background: rgba(10,10,26,0.95);
+  border: 1px solid var(--gold-dark);
+  padding: 12px 28px;
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.4s ease;
+  box-shadow: 0 4px 30px rgba(212,168,67,0.2);
+  max-width: 90vw;
+  text-align: center;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 1024px) {
+  .game-layout {
+    grid-template-columns: 200px 1fr 180px;
+  }
+}
+
+@media (max-width: 768px) {
+  html, body {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Title screen: scrollable */
+  #title-screen {
+    justify-content: flex-start;
+    padding-top: 15vh;
+  }
+
+  .title-castle {
+    height: 40%;
+  }
+
+  /* Character screen: full scroll */
+  #character-screen {
+    justify-content: flex-start;
+    padding: 24px 0 40px;
+  }
+
+  .char-header {
+    font-size: 22px;
+  }
+
+  .house-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    width: 94%;
+    margin-bottom: 20px;
+  }
+
+  .house-card {
+    padding: 16px 10px;
+  }
+
+  .house-crest {
+    font-size: 30px;
+    margin-bottom: 6px;
+  }
+
+  .house-name {
+    font-size: 14px;
+  }
+
+  .house-stats {
+    gap: 10px;
+    font-size: 10px;
+  }
+
+  .house-stats .stat-val {
+    font-size: 13px;
+  }
+
+  .name-input-area {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .name-input-area input {
+    width: 80vw;
+    max-width: 280px;
+  }
+
+  .btn-magic {
+    min-width: 200px;
+    padding: 12px 32px;
+    font-size: 14px;
+  }
+
+  /* Game screen: redesigned mobile layout */
+  #game-screen {
+    overflow: hidden;
+  }
+
+  .game-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: 48px 1fr auto 44px;
+    height: 100%;
+    height: 100dvh; /* dynamic viewport height for mobile browsers */
+  }
+
+  .top-bar {
+    padding: 0 12px;
+    min-height: 48px;
+  }
+
+  .logo-mini {
+    font-size: 12px;
+  }
+
+  .location-name {
+    font-size: 12px;
+    padding-left: 10px;
+  }
+
+  .resource-item {
+    gap: 3px;
+  }
+
+  .resource-icon {
+    font-size: 13px;
+  }
+
+  .resource-val {
+    font-size: 12px;
+  }
+
+  .resource-label {
+    display: none;
+  }
+
+  /* Hide side panels by default on mobile */
+  .left-panel, .right-panel {
+    display: none;
+  }
+
+  .left-panel.mobile-open, .right-panel.mobile-open {
+    display: flex;
+    position: fixed;
+    top: 48px;
+    bottom: 44px;
+    width: 85vw;
+    max-width: 320px;
+    z-index: 50;
+    background: rgba(10,10,26,0.98);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    box-shadow: 4px 0 30px rgba(0,0,0,0.5);
+  }
+
+  .left-panel.mobile-open { left: 0; }
+  .right-panel.mobile-open { right: 0; }
+
+  /* Mobile overlay for side panels */
+  .mobile-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 45;
+  }
+
+  .mobile-toggles {
+    display: flex !important;
+  }
+
+  /* Center scene: mobile optimized */
+  .center-scene {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .scene-viewport {
+    min-height: 120px;
+  }
+
+  .scene-narrative {
+    padding: 30px 16px 12px;
+    max-height: 80%;
+    overflow-y: auto;
+  }
+
+  .narrative-text {
+    font-size: 14px;
+    line-height: 1.8;
+  }
+
+  .scene-choices {
+    padding: 10px 12px;
+    padding-bottom: max(10px, env(safe-area-inset-bottom, 10px));
+    gap: 8px;
+    max-height: 40vh;
+    overflow-y: auto;
+    align-content: flex-start;
+  }
+
+  .choice-btn {
+    font-size: 13px;
+    padding: 10px 14px;
+    width: 100%;
+    max-width: 100%;
+    text-align: left;
+  }
+
+  /* Bottom bar */
+  .bottom-bar {
+    min-height: 44px;
+    padding: 0 12px;
+  }
+
+  .log-entry {
+    font-size: 11px;
+  }
+}
+
+/* Extra small phones */
+@media (max-width: 380px) {
+  .house-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .house-card {
+    display: grid;
+    grid-template-columns: 40px 1fr auto;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    text-align: left;
+  }
+
+  .house-crest {
+    font-size: 26px;
+    margin: 0;
+  }
+
+  .house-name { font-size: 14px; }
+  .house-name-en { font-size: 10px; margin-bottom: 0; }
+  .house-trait { font-size: 11px; }
+
+  .house-stats {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+    margin-top: 4px;
+  }
+
+  .top-bar-right {
+    gap: 12px;
+  }
+}
+
+.mobile-toggles {
+  display: none;
+  gap: 8px;
+}
+
+.mobile-toggle-btn {
+  font-size: 18px;
+  background: none;
+  border: 1px solid rgba(212,168,67,0.2);
+  color: var(--gold);
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+/* ============ SCROLLBAR ============ */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(212,168,67,0.2); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+<div class="spell-flash" id="spellFlash"></div>
+<div class="toast" id="toast"></div>
+
+<!-- ============ TITLE SCREEN ============ -->
+<div class="screen active" id="title-screen">
+  <div class="title-content">
+    <div class="title-badge">✦ 一場魔法冒險即將展開 ✦</div>
+    <h1 class="game-title">7PotterMania<br>World</h1>
+    <p class="game-subtitle">魔法世界編年史</p>
+    <div class="title-actions">
+      <button class="btn-magic" onclick="showScreen('character-screen')">
+        ✦ 開始你的旅程 ✦
+      </button>
+      <button class="btn-magic btn-secondary" onclick="showScreen('character-screen')">
+        繼續冒險
+      </button>
+    </div>
+  </div>
+  <div class="title-castle">
+    <div class="castle-silhouette">
+      <svg viewBox="0 0 1200 400" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="castleGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#2a2a4a"/>
+            <stop offset="100%" stop-color="#1a1a2a"/>
+          </linearGradient>
+          <linearGradient id="windowGlow" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#f0d078"/>
+            <stop offset="100%" stop-color="#d4a843"/>
+          </linearGradient>
+        </defs>
+        <polygon points="0,400 100,250 200,320 350,200 500,280 600,180 750,260 900,150 1000,230 1100,190 1200,250 1200,400" fill="#0f0f1f"/>
+        <polygon points="300,400 300,180 320,180 320,120 340,120 340,180 460,180 460,140 480,100 500,140 500,180 660,180 660,160 680,120 700,160 700,180 860,180 860,120 880,80 900,120 900,400" fill="url(#castleGrad)"/>
+        <rect x="280" y="140" width="60" height="260" fill="#252540"/>
+        <polygon points="280,140 310,80 340,140" fill="#303050"/>
+        <rect x="840" y="100" width="80" height="300" fill="#252540"/>
+        <polygon points="840,100 880,40 920,100" fill="#303050"/>
+        <rect x="560" y="130" width="50" height="270" fill="#252540"/>
+        <polygon points="560,130 585,60 610,130" fill="#303050"/>
+        <rect x="295" y="170" width="8" height="12" rx="2" fill="url(#windowGlow)" opacity="0.9"/>
+        <rect x="317" y="200" width="8" height="12" rx="2" fill="url(#windowGlow)" opacity="0.7"/>
+        <rect x="295" y="240" width="8" height="12" rx="2" fill="url(#windowGlow)" opacity="0.8"/>
+        <rect x="570" y="160" width="8" height="12" rx="2" fill="url(#windowGlow)" opacity="0.9"/>
+        <rect x="590" y="190" width="8" height="12" rx="2" fill="url(#windowGlow)" opacity="0.6"/>
+        <rect x="855" y="130" width="10" height="14" rx="2" fill="url(#windowGlow)" opacity="0.8"/>
+        <rect x="890" y="160" width="10" height="14" rx="2" fill="url(#windowGlow)" opacity="0.7"/>
+        <rect x="855" y="200" width="10" height="14" rx="2" fill="url(#windowGlow)" opacity="0.9"/>
+        <rect x="420" y="210" width="8" height="12" rx="2" fill="url(#windowGlow)" opacity="0.5"/>
+        <rect x="460" y="230" width="8" height="12" rx="2" fill="url(#windowGlow)" opacity="0.8"/>
+        <rect x="740" y="220" width="8" height="12" rx="2" fill="url(#windowGlow)" opacity="0.6"/>
+        <rect x="380" y="250" width="8" height="12" rx="2" fill="url(#windowGlow)" opacity="0.7"/>
+        <rect x="500" y="200" width="8" height="12" rx="2" fill="url(#windowGlow)" opacity="0.5"/>
+        <rect x="780" y="200" width="8" height="12" rx="2" fill="url(#windowGlow)" opacity="0.9"/>
+        <path d="M570,400 L570,340 Q585,310 600,340 L600,400 Z" fill="#151525"/>
+        <ellipse cx="600" cy="400" rx="700" ry="60" fill="rgba(106,58,188,0.08)"/>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<!-- ============ CHARACTER SCREEN ============ -->
+<div class="screen" id="character-screen">
+  <h2 class="char-header">選擇你的命運</h2>
+  <p class="char-sub">選擇你的學院</p>
+
+  <div class="house-grid">
+    <div class="house-card" style="--house-color: #ae0001" onclick="selectHouse(this, 'gryffindor')" data-house="gryffindor">
+      <span class="house-crest">🦁</span>
+      <div class="house-name">葛萊分多</div>
+      <div class="house-name-en">Gryffindor</div>
+      <div class="house-trait">勇氣 &amp; 膽識</div>
+      <div class="house-stats">
+        <span><span class="stat-val">9</span>力量</span>
+        <span><span class="stat-val">6</span>智力</span>
+        <span><span class="stat-val">7</span>魅力</span>
+      </div>
+    </div>
+    <div class="house-card" style="--house-color: #2a623d" onclick="selectHouse(this, 'slytherin')" data-house="slytherin">
+      <span class="house-crest">🐍</span>
+      <div class="house-name">史萊哲林</div>
+      <div class="house-name-en">Slytherin</div>
+      <div class="house-trait">野心 &amp; 狡黠</div>
+      <div class="house-stats">
+        <span><span class="stat-val">7</span>力量</span>
+        <span><span class="stat-val">8</span>智力</span>
+        <span><span class="stat-val">9</span>魅力</span>
+      </div>
+    </div>
+    <div class="house-card" style="--house-color: #0e1a40" onclick="selectHouse(this, 'ravenclaw')" data-house="ravenclaw">
+      <span class="house-crest">🦅</span>
+      <div class="house-name">雷文克勞</div>
+      <div class="house-name-en">Ravenclaw</div>
+      <div class="house-trait">智慧 &amp; 機敏</div>
+      <div class="house-stats">
+        <span><span class="stat-val">5</span>力量</span>
+        <span><span class="stat-val">10</span>智力</span>
+        <span><span class="stat-val">7</span>魅力</span>
+      </div>
+    </div>
+    <div class="house-card" style="--house-color: #c89b3c" onclick="selectHouse(this, 'hufflepuff')" data-house="hufflepuff">
+      <span class="house-crest">🦡</span>
+      <div class="house-name">赫夫帕夫</div>
+      <div class="house-name-en">Hufflepuff</div>
+      <div class="house-trait">忠誠 &amp; 耐心</div>
+      <div class="house-stats">
+        <span><span class="stat-val">7</span>力量</span>
+        <span><span class="stat-val">7</span>智力</span>
+        <span><span class="stat-val">10</span>魅力</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="name-input-area">
+    <label>巫師名稱：</label>
+    <input type="text" id="wizardName" placeholder="輸入你的名字⋯" maxlength="20">
+  </div>
+
+  <button class="btn-magic" onclick="startGame()">
+    ✦ 進入魔法世界 ✦
+  </button>
+</div>
+
+<!-- ============ GAME SCREEN ============ -->
+<div class="screen" id="game-screen">
+  <div class="game-layout">
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <div class="mobile-toggles">
+          <button class="mobile-toggle-btn" onclick="togglePanel('left')">☰</button>
+        </div>
+        <span class="logo-mini">7PMW</span>
+        <span class="location-name" id="locationName">大禮堂</span>
+      </div>
+      <div class="top-bar-right">
+        <div class="resource-item">
+          <span class="resource-icon">⚡</span>
+          <span class="resource-val" id="manaVal">100</span>
+          <span class="resource-label">魔力</span>
+        </div>
+        <div class="resource-item">
+          <span class="resource-icon">❤️</span>
+          <span class="resource-val" id="healthVal">100</span>
+          <span class="resource-label">血量</span>
+        </div>
+        <div class="resource-item">
+          <span class="resource-icon">🪙</span>
+          <span class="resource-val" id="goldVal">50</span>
+          <span class="resource-label">金幣</span>
+        </div>
+        <div class="mobile-toggles">
+          <button class="mobile-toggle-btn" onclick="togglePanel('right')">🎒</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="left-panel" id="leftPanel">
+      <div class="player-card">
+        <div class="player-avatar" id="playerAvatar">🧙</div>
+        <div class="player-name" id="playerName">巫師</div>
+        <div class="player-house-label" id="playerHouse">學院</div>
+        <div class="player-level">等級 <span id="playerLevel">1</span></div>
+        <div class="xp-bar"><div class="xp-fill" id="xpFill" style="width: 0%"></div></div>
+      </div>
+
+      <div>
+        <div class="panel-section-title">角色屬性</div>
+        <div class="stat-list">
+          <div class="stat-row"><span class="stat-name">力量</span><span class="stat-value" id="statStr">7</span></div>
+          <div class="stat-row"><span class="stat-name">智力</span><span class="stat-value" id="statInt">7</span></div>
+          <div class="stat-row"><span class="stat-name">魅力</span><span class="stat-value" id="statCha">7</span></div>
+          <div class="stat-row"><span class="stat-name">防禦</span><span class="stat-value" id="statDef">5</span></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="panel-section-title">已學咒語</div>
+        <div class="spell-list" id="spellList"></div>
+      </div>
+    </div>
+
+    <div class="center-scene">
+      <div class="scene-viewport">
+        <div class="scene-bg">
+          <div class="scene-art" id="sceneArt"></div>
+        </div>
+        <div class="scene-narrative">
+          <p class="narrative-text" id="narrativeText"></p>
+        </div>
+      </div>
+      <div class="scene-choices" id="sceneChoices"></div>
+    </div>
+
+    <div class="right-panel" id="rightPanel">
+      <div>
+        <div class="panel-section-title">背包物品</div>
+        <div class="inventory-grid" id="inventoryGrid"></div>
+      </div>
+      <div>
+        <div class="panel-section-title">進行中任務</div>
+        <div class="quest-list" id="questList"></div>
+      </div>
+    </div>
+
+    <div class="bottom-bar">
+      <div class="log-entry" id="logEntry">
+        <span class="log-time">▸</span>
+        歡迎來到魔法世界⋯
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ STARFIELD ============
+const canvas = document.getElementById('starfield');
+const ctx = canvas.getContext('2d');
+let stars = [];
+
+function initStars() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  stars = [];
+  for (let i = 0; i < 200; i++) {
+    stars.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 1.5 + 0.3,
+      twinkle: Math.random() * Math.PI * 2,
+      twinkleSpeed: Math.random() * 0.02 + 0.005
+    });
+  }
+}
+
+function drawStars() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  stars.forEach(s => {
+    s.twinkle += s.twinkleSpeed;
+    const alpha = 0.3 + Math.sin(s.twinkle) * 0.4;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(240, 208, 120, ${alpha})`;
+    ctx.fill();
+  });
+  requestAnimationFrame(drawStars);
+}
+
+initStars();
+drawStars();
+window.addEventListener('resize', initStars);
+
+// ============ SCREEN MANAGEMENT ============
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ============ TOAST ============
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ============ GAME STATE ============
+const GameState = {
+  name: '巫師',
+  house: 'gryffindor',
+  level: 1, xp: 0, xpNext: 100,
+  hp: 100, maxHp: 100,
+  mana: 100, maxMana: 100,
+  gold: 50,
+  str: 7, int: 7, cha: 7, def: 5,
+  spells: ['lumos', 'expelliarmus'],
+  inventory: [
+    { id: 'wand', name: '接骨木魔杖', icon: '🪄', count: 1 },
+    { id: 'potion_hp', name: '治療藥水', icon: '🧪', count: 3 },
+    { id: 'book', name: '咒語大全', icon: '📖', count: 1 },
+  ],
+  quests: [
+    { id: 'q1', title: '分類儀式', desc: '找到你在學校的歸屬。', progress: 100 },
+    { id: 'q2', title: '第一堂課', desc: '參加你的第一堂魔藥學課。', progress: 0 },
+  ],
+  currentScene: 'great_hall',
+  flags: {}
+};
+
+// ============ SPELLS DATA ============
+const SPELLS = {
+  lumos:        { name: '螢光閃爍', latin: 'Lumos',        icon: '💡', cost: 5,  desc: '創造光芒' },
+  expelliarmus: { name: '去去武器走', latin: 'Expelliarmus', icon: '⚔️', cost: 15, desc: '繳械對手' },
+  protego:      { name: '破心護',   latin: 'Protego',      icon: '🛡️', cost: 20, desc: '防護咒語' },
+  stupefy:      { name: '乒乓去',   latin: 'Stupefy',      icon: '⚡', cost: 25, desc: '昏擊咒語' },
+  accio:        { name: '速速前',   latin: 'Accio',        icon: '🫳', cost: 10, desc: '召喚物品' },
+  patronus:     { name: '乘乘護法', latin: 'Patronus',     icon: '🦌', cost: 50, desc: '守護靈咒' },
+};
+
+// ============ HOUSE SELECT ============
+let selectedHouse = null;
+
+function selectHouse(el, house) {
+  document.querySelectorAll('.house-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedHouse = house;
+  const stats = {
+    gryffindor:  { str: 9, int: 6, cha: 7, def: 6 },
+    slytherin:   { str: 7, int: 8, cha: 9, def: 6 },
+    ravenclaw:   { str: 5, int: 10, cha: 7, def: 6 },
+    hufflepuff:  { str: 7, int: 7, cha: 10, def: 7 },
+  };
+  Object.assign(GameState, stats[house]);
+  GameState.house = house;
+}
+
+const HOUSE_DATA = {
+  gryffindor: { emoji: '🦁', color: '#ae0001', name: '葛萊分多' },
+  slytherin:  { emoji: '🐍', color: '#2a623d', name: '史萊哲林' },
+  ravenclaw:  { emoji: '🦅', color: '#0e1a40', name: '雷文克勞' },
+  hufflepuff: { emoji: '🦡', color: '#c89b3c', name: '赫夫帕夫' },
+};
+
+// ============ SCENES ============
+const SCENES = {
+  great_hall: {
+    location: '大禮堂',
+    art: 'great_hall',
+    narrative: `<span class="highlight">大禮堂</span>的魔法天花板閃爍著千盞浮空蠟燭，映照著頭頂的星空。長長的學院餐桌在你面前延伸，擺滿金色餐盤。空氣中瀰漫著低語的咒語與興奮的交談聲。你在魔法學校的旅程，從這裡開始。`,
+    choices: [
+      { text: '探索地下城', scene: 'dungeons', icon: '🕯️' },
+      { text: '前往圖書館', scene: 'library', icon: '📚' },
+      { text: '走向中庭', scene: 'courtyard', icon: '🏰' },
+      { text: '攀登大階梯', scene: 'staircase', icon: '🪜' },
+    ]
+  },
+  dungeons: {
+    location: '地下城',
+    art: 'dungeons',
+    narrative: `冰冷的石牆上滲出水珠，你走進了<span class="highlight">地下城</span>。走廊上的火把忽明忽暗，投射出舞動的陰影。魔藥學教室的門半開著——裡面的坩堝冒著神秘的泡泡。架子上一個發光的藥瓶引起了你的注意⋯`,
+    choices: [
+      { text: '拿起發光的藥瓶', action: 'take_vial', icon: '🧪' },
+      { text: '參加魔藥學課', scene: 'potions_class', icon: '⚗️' },
+      { text: '調查奇怪的聲音', scene: 'secret_passage', icon: '👂' },
+      { text: '返回大禮堂', scene: 'great_hall', icon: '↩️' },
+    ]
+  },
+  library: {
+    location: '圖書館',
+    art: 'library',
+    narrative: `高聳的書架在頭頂延伸至黑暗中。<span class="highlight">圖書館</span>異常安靜——只有羽毛筆的沙沙聲和翻頁的窸窣聲打破寂靜。禁書區在天鵝絨繩索後方隱隱發光。閱覽桌上一本佈滿灰塵的書似乎在散發魔法能量。`,
+    choices: [
+      { text: '閱讀那本發光的書', action: 'read_book', icon: '📖' },
+      { text: '潛入禁書區', scene: 'restricted', icon: '🚫' },
+      { text: '研習防禦咒語', action: 'study_defense', icon: '📝' },
+      { text: '返回大禮堂', scene: 'great_hall', icon: '↩️' },
+    ]
+  },
+  courtyard: {
+    location: '中庭',
+    art: 'courtyard',
+    narrative: `陽光傾灑進開放的<span class="highlight">中庭</span>，溫暖著古老的石磚。學生們對著訓練假人練習咒語，貓頭鷹在頭頂盤旋送信。鐘樓上一個穿著黑色斗篷的神秘身影正注視著你。有人向你發起了友誼決鬥的挑戰！`,
+    choices: [
+      { text: '接受決鬥挑戰', scene: 'duel', icon: '⚔️' },
+      { text: '調查神秘斗篷人', scene: 'clock_tower', icon: '🕵️' },
+      { text: '練習施放咒語', action: 'practice_spells', icon: '✨' },
+      { text: '返回大禮堂', scene: 'great_hall', icon: '↩️' },
+    ]
+  },
+  staircase: {
+    location: '大階梯',
+    art: 'staircase',
+    narrative: `<span class="highlight">大階梯</span>無盡地向上延伸，被施了魔法的階梯不斷移動和重新排列，發出深沉的隆隆聲。肖像畫中的人物在你經過時竊竊私語。一道階梯突然轉向——通往一條你從未見過的走廊。一位畫中騎士要求你回答一個謎語。`,
+    choices: [
+      { text: '回答謎語', action: 'riddle', icon: '🤔' },
+      { text: '跟隨隱藏的走廊', scene: 'hidden_room', icon: '🚪' },
+      { text: '前往天文塔', scene: 'astronomy', icon: '🔭' },
+      { text: '返回大禮堂', scene: 'great_hall', icon: '↩️' },
+    ]
+  },
+  potions_class: {
+    location: '魔藥學教室',
+    art: 'dungeons',
+    narrative: `嚴厲的魔藥學教授在你入座時審視著你。今天的課程：<span class="highlight">福來福去</span>——液態幸運。材料已經擺在你面前，但配方極其複雜。一步走錯，坩堝就可能爆炸！`,
+    choices: [
+      { text: '仔細按照配方操作（智力檢定）', action: 'brew_careful', icon: '📋' },
+      { text: '憑直覺即興發揮', action: 'brew_improv', icon: '🎲' },
+      { text: '請同學幫忙（魅力檢定）', action: 'brew_help', icon: '🗣️' },
+      { text: '離開教室', scene: 'dungeons', icon: '↩️' },
+    ]
+  },
+  secret_passage: {
+    location: '秘密通道',
+    art: 'dungeons',
+    narrative: `在一幅掛毯後面，你發現了一條狹窄的<span class="highlight">秘密通道</span>。牆壁上刻滿了閃爍的古老符文。通道分岔——一條通往黑暗的深處，另一條通向遙遠的光明。下方傳來奇怪的低語聲⋯`,
+    choices: [
+      { text: '走向黑暗深處', action: 'descend_dark', icon: '⬇️' },
+      { text: '朝光明方向前進', scene: 'hidden_room', icon: '⬆️' },
+      { text: '施放螢光閃爍觀察符文', action: 'examine_runes', icon: '💡' },
+      { text: '返回安全的地方', scene: 'dungeons', icon: '↩️' },
+    ]
+  },
+  restricted: {
+    location: '禁書區',
+    art: 'library',
+    narrative: `你悄悄溜過天鵝絨繩索，進入了<span class="highlight">禁書區</span>。這裡的書彷彿有生命——一本向你的手指咬來，另一本低聲呼喚你的名字。一本巨大的皮革封面典籍擺在台座上，書頁散發著銀色的光芒。這是強大的魔法⋯`,
+    choices: [
+      { text: '翻開銀光典籍', action: 'open_tome', icon: '📕' },
+      { text: '搜尋特定咒語', action: 'search_spell', icon: '🔍' },
+      { text: '趁沒被發現快跑', scene: 'library', icon: '🏃' },
+    ]
+  },
+  duel: {
+    location: '決鬥場',
+    art: 'courtyard',
+    narrative: `你站在<span class="highlight">決鬥場</span>上，魔杖高舉！對手向你鞠躬後進入戰鬥姿態。圍觀的群眾安靜下來。火花在你的魔杖尖端跳舞，你準備施放第一個咒語。謹慎選擇——你的對手實力不弱！`,
+    choices: [
+      { text: '施放去去武器走！（力量）', action: 'duel_attack', icon: '⚔️' },
+      { text: '施放破心護！（防禦）', action: 'duel_defend', icon: '🛡️' },
+      { text: '施放乒乓去！（智力）', action: 'duel_stun', icon: '⚡' },
+      { text: '認輸退出', scene: 'courtyard', icon: '🏳️' },
+    ]
+  },
+  clock_tower: {
+    location: '鐘樓',
+    art: 'staircase',
+    narrative: `<span class="highlight">鐘樓</span>巨大的齒輪在你頭頂轟然運轉。斗篷人轉過身來——是一位你從未見過的教師。「我一直在觀察你，」他說。「你很有潛力。我可以教你一個強大的咒語⋯如果你夠勇敢的話。」`,
+    choices: [
+      { text: '接受提議', action: 'learn_patronus', icon: '✨' },
+      { text: '拒絕——這可能是陷阱', scene: 'courtyard', icon: '🚫' },
+      { text: '詢問他的身分（魅力檢定）', action: 'ask_identity', icon: '❓' },
+    ]
+  },
+  hidden_room: {
+    location: '萬應室',
+    art: 'library',
+    narrative: `你找到了——傳說中的<span class="highlight">萬應室</span>！房間化身為一座寶庫，裝滿了數百年來的魔法寶物。一面鏡子映出的不是你的倒影，而是你內心最深的渴望。在這些寶藏之中，有樣東西散發著不可思議的力量。`,
+    choices: [
+      { text: '拿取閃耀的寶物', action: 'take_artifact', icon: '💎' },
+      { text: '注視魔鏡', action: 'mirror_gaze', icon: '🪞' },
+      { text: '搜尋隱藏的通道', action: 'search_room', icon: '🔍' },
+      { text: '小心離開', scene: 'staircase', icon: '↩️' },
+    ]
+  },
+  astronomy: {
+    location: '天文塔',
+    art: 'courtyard',
+    narrative: `<span class="highlight">天文塔</span>上可以看到壯麗的校園全景。星辰在天空中燦爛閃耀，禁忌森林在遠方黑暗而無盡地延伸。透過望遠鏡，你發現森林中有什麼東西在移動——巨大而且發出光芒。`,
+    choices: [
+      { text: '研究星象尋找線索', action: 'study_stars', icon: '⭐' },
+      { text: '向森林方向發出信號', action: 'signal_forest', icon: '🔦' },
+      { text: '享受寧靜的夜景', action: 'rest', icon: '🌙' },
+      { text: '下塔離開', scene: 'staircase', icon: '↩️' },
+    ]
+  },
+};
+
+// ============ SCENE ART ============
+function getSceneArt(sceneId) {
+  const arts = {
+    great_hall: `<svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="hallBg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#1a1030"/>
+          <stop offset="50%" stop-color="#0f0a20"/>
+          <stop offset="100%" stop-color="#0a0815"/>
+        </linearGradient>
+        <radialGradient id="candle" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#f0d078" stop-opacity="0.8"/>
+          <stop offset="100%" stop-color="#f0d078" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <rect width="800" height="500" fill="url(#hallBg)"/>
+      <path d="M0,150 Q100,50 200,150 L200,500 L0,500 Z" fill="#12081f" opacity="0.6"/>
+      <path d="M200,120 Q300,30 400,120 L400,500 L200,500 Z" fill="#12081f" opacity="0.4"/>
+      <path d="M400,120 Q500,30 600,120 L600,500 L400,500 Z" fill="#12081f" opacity="0.4"/>
+      <path d="M600,150 Q700,50 800,150 L800,500 L600,500 Z" fill="#12081f" opacity="0.6"/>
+      <rect x="195" y="120" width="10" height="380" fill="#1a1030" opacity="0.8"/>
+      <rect x="395" y="120" width="10" height="380" fill="#1a1030" opacity="0.8"/>
+      <rect x="595" y="120" width="10" height="380" fill="#1a1030" opacity="0.8"/>
+      ${Array.from({length: 20}, () => {
+        const x = 60 + Math.random() * 680;
+        const y = 80 + Math.random() * 200;
+        return `<circle cx="${x}" cy="${y}" r="15" fill="url(#candle)"/><rect x="${x-1.5}" y="${y-8}" width="3" height="12" rx="1" fill="#f0d078" opacity="0.9"/>`;
+      }).join('')}
+      <rect x="50" y="380" width="300" height="8" rx="2" fill="#3a2510" opacity="0.8"/>
+      <rect x="450" y="380" width="300" height="8" rx="2" fill="#3a2510" opacity="0.8"/>
+      <rect x="0" y="440" width="800" height="60" fill="#0a0610" opacity="0.8"/>
+    </svg>`,
+    dungeons: `<svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="dungBg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0a0e0a"/><stop offset="100%" stop-color="#050805"/></linearGradient>
+        <radialGradient id="torch" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#e8a030" stop-opacity="0.5"/><stop offset="100%" stop-color="#e8a030" stop-opacity="0"/></radialGradient>
+        <radialGradient id="potionGlow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#40e880" stop-opacity="0.4"/><stop offset="100%" stop-color="#40e880" stop-opacity="0"/></radialGradient>
+      </defs>
+      <rect width="800" height="500" fill="url(#dungBg)"/>
+      ${Array.from({length: 15}, (_, i) => `<line x1="0" y1="${i*35}" x2="800" y2="${i*35}" stroke="#1a201a" stroke-width="1" opacity="0.5"/>`).join('')}
+      <path d="M250,500 L250,180 Q400,80 550,180 L550,500" fill="none" stroke="#2a352a" stroke-width="3"/>
+      <circle cx="200" cy="200" r="40" fill="url(#torch)"/><rect x="197" y="210" width="6" height="30" fill="#4a3a2a"/>
+      <circle cx="600" cy="200" r="40" fill="url(#torch)"/><rect x="597" y="210" width="6" height="30" fill="#4a3a2a"/>
+      <ellipse cx="400" cy="380" rx="50" ry="20" fill="#1a1a1a"/>
+      <path d="M350,370 Q350,420 400,430 Q450,420 450,370" fill="#2a2a2a" stroke="#3a3a3a" stroke-width="1"/>
+      <circle cx="400" cy="360" r="35" fill="url(#potionGlow)"/>
+      ${Array.from({length: 8}, () => `<circle cx="${380+Math.random()*40}" cy="${330+Math.random()*30}" r="${2+Math.random()*4}" fill="#40e880" opacity="${0.2+Math.random()*0.3}"/>`).join('')}
+      <rect x="60" y="250" width="120" height="4" fill="#3a2a1a"/>
+      <rect x="60" y="310" width="120" height="4" fill="#3a2a1a"/>
+      ${['#e83030','#3080e8','#e8c830','#30e860','#c830e8'].map((c,i) => `<rect x="${70+i*22}" y="235" width="10" height="15" rx="2" fill="${c}" opacity="0.7"/>`).join('')}
+    </svg>`,
+    library: `<svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="libBg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#10080a"/><stop offset="100%" stop-color="#0a0508"/></linearGradient></defs>
+      <rect width="800" height="500" fill="url(#libBg)"/>
+      ${[0,1,2,3,4].map(col => {
+        const x = 30 + col * 155;
+        return `<rect x="${x}" y="40" width="130" height="420" fill="#1a0e08" stroke="#2a1a10" stroke-width="1"/>
+        ${[0,1,2,3,4,5].map(row => {
+          const y = 50 + row * 68;
+          return `<rect x="${x+2}" y="${y}" width="126" height="60" fill="#12080a"/>
+          ${Array.from({length:8}, (_,b) => {
+            const bx = x + 6 + b * 15;
+            const bh = 35 + Math.random() * 20;
+            const colors = ['#8b1a1a','#1a3a6c','#2a623d','#6a3a1a','#4a2a5a','#1a4a4a','#5a3a2a','#3a2a4a'];
+            return `<rect x="${bx}" y="${y+60-bh}" width="12" height="${bh}" fill="${colors[b]}" opacity="0.8" rx="1"/>`;
+          }).join('')}`;
+        }).join('')}`;
+      }).join('')}
+      <circle cx="400" cy="250" r="100" fill="rgba(240,208,120,0.05)"/>
+      <rect x="340" y="380" width="120" height="6" rx="2" fill="#2a1a10"/>
+      <rect x="360" y="370" width="30" height="12" rx="1" fill="#f5e6c8" opacity="0.3"/>
+    </svg>`,
+    courtyard: `<svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1a2a4a"/><stop offset="60%" stop-color="#2a3a5a"/><stop offset="100%" stop-color="#1a2530"/></linearGradient></defs>
+      <rect width="800" height="500" fill="url(#skyGrad)"/>
+      ${Array.from({length: 30}, () => `<circle cx="${Math.random()*800}" cy="${Math.random()*200}" r="${0.5+Math.random()}" fill="#f0d078" opacity="${0.3+Math.random()*0.5}"/>`).join('')}
+      <rect x="0" y="200" width="200" height="300" fill="#2a2a3a"/>
+      <rect x="600" y="180" width="200" height="320" fill="#2a2a3a"/>
+      <polygon points="0,200 40,140 80,200" fill="#353545"/>
+      <polygon points="120,200 160,130 200,200" fill="#353545"/>
+      <polygon points="600,180 640,110 680,180" fill="#353545"/>
+      <polygon points="720,180 760,100 800,180" fill="#353545"/>
+      <rect x="50" y="240" width="15" height="25" rx="3" fill="#f0d078" opacity="0.4"/>
+      <rect x="130" y="260" width="15" height="25" rx="3" fill="#f0d078" opacity="0.3"/>
+      <rect x="650" y="220" width="15" height="25" rx="3" fill="#f0d078" opacity="0.5"/>
+      <rect x="740" y="240" width="15" height="25" rx="3" fill="#f0d078" opacity="0.3"/>
+      <rect x="0" y="420" width="800" height="80" fill="#1a1a15"/>
+      <rect x="200" y="400" width="400" height="100" fill="#1a1a18"/>
+      <ellipse cx="400" cy="400" rx="60" ry="15" fill="#2a2a3a" stroke="#3a3a4a" stroke-width="1"/>
+      <rect x="396" y="340" width="8" height="60" fill="#3a3a4a"/>
+      <circle cx="400" cy="340" r="12" fill="#2a2a3a" stroke="#3a3a4a" stroke-width="1"/>
+    </svg>`,
+    staircase: `<svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="stairBg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0a0815"/><stop offset="100%" stop-color="#050410"/></linearGradient></defs>
+      <rect width="800" height="500" fill="url(#stairBg)"/>
+      <g opacity="0.7">
+        <path d="M100,480 L100,350 L250,350 L250,250 L400,250 L400,150 L550,150" fill="none" stroke="#2a2030" stroke-width="20" stroke-linecap="round"/>
+        <path d="M700,480 L700,300 L550,300 L550,200 L400,200 L400,100" fill="none" stroke="#251a2a" stroke-width="18" stroke-linecap="round"/>
+        <path d="M300,480 L300,400 L500,400 L500,320 L650,320 L650,180" fill="none" stroke="#201525" stroke-width="16" stroke-linecap="round"/>
+      </g>
+      <line x1="100" y1="345" x2="250" y2="345" stroke="#4a3a50" stroke-width="2"/>
+      <line x1="250" y1="245" x2="400" y2="245" stroke="#4a3a50" stroke-width="2"/>
+      <rect x="60" y="200" width="50" height="70" rx="2" fill="#2a1a10" stroke="#4a3020" stroke-width="2"/>
+      <rect x="690" y="150" width="50" height="70" rx="2" fill="#1a1a30" stroke="#3a3050" stroke-width="2"/>
+      <rect x="350" y="80" width="60" height="45" rx="2" fill="#2a2010" stroke="#4a3820" stroke-width="2"/>
+      <circle cx="400" cy="250" r="80" fill="rgba(240,208,120,0.04)"/>
+    </svg>`,
+  };
+  return arts[sceneId] || arts.great_hall;
+}
+
+// ============ ACTION HANDLERS ============
+function handleAction(action) {
+  const actions = {
+    take_vial: () => {
+      addItem('potion_mana', '魔力藥水', '💜', 1);
+      showToast('✨ 發現了魔力藥水！');
+      addXP(15);
+      logMessage('你小心翼翼地將發光藥瓶收入口袋。');
+    },
+    read_book: () => {
+      if (GameState.int >= 7) {
+        if (!GameState.spells.includes('accio')) {
+          GameState.spells.push('accio');
+          showToast('✨ 學會了新咒語：速速前！');
+          addXP(30);
+        } else {
+          showToast('你已經學會了這個咒語。');
+        }
+      } else {
+        showToast('這些文字對你來說太深奧了⋯（需要智力 7）');
+      }
+      logMessage('你仔細研讀古老的文獻。');
+    },
+    study_defense: () => {
+      if (!GameState.spells.includes('protego')) {
+        GameState.spells.push('protego');
+        showToast('✨ 學會了破心護！');
+        addXP(25);
+      } else {
+        GameState.def += 1;
+        showToast('防禦力 +1！');
+        addXP(10);
+      }
+      logMessage('你練習防禦魔法。');
+    },
+    practice_spells: () => {
+      GameState.int += 1;
+      showToast('智力 +1！');
+      addXP(15);
+      logMessage('你的魔法能力變得更加強大。');
+    },
+    brew_careful: () => {
+      if (GameState.int >= 8) {
+        addItem('felix', '福來福去', '🌟', 1);
+        showToast('✨ 成功調製了福來福去！液態幸運！');
+        addXP(40);
+        updateQuest('q2', 100);
+      } else {
+        GameState.hp = Math.max(10, GameState.hp - 20);
+        showToast('💥 坩堝爆炸了！血量 -20');
+      }
+      logMessage('你嘗試調製福來福去⋯');
+    },
+    brew_improv: () => {
+      if (Math.random() > 0.5) {
+        addItem('felix', '福來福去', '🌟', 1);
+        showToast('✨ 你的直覺奏效了！成功調製！');
+        addXP(50);
+        updateQuest('q2', 100);
+      } else {
+        GameState.hp = Math.max(10, GameState.hp - 15);
+        showToast('💥 出了點差錯！血量 -15');
+      }
+    },
+    brew_help: () => {
+      if (GameState.cha >= 8) {
+        addItem('felix', '福來福去', '🌟', 1);
+        showToast('✨ 同學幫助你成功了！');
+        addXP(30);
+        updateQuest('q2', 100);
+      } else {
+        showToast('沒有人願意幫你⋯（需要魅力 8）');
+      }
+    },
+    descend_dark: () => {
+      if (GameState.spells.includes('lumos')) {
+        GameState.gold += 30;
+        showToast('🪙 發現隱藏寶藏！金幣 +30');
+        addXP(25);
+      } else {
+        GameState.hp = Math.max(10, GameState.hp - 25);
+        showToast('你在黑暗中絆倒了！血量 -25');
+      }
+      logMessage('你深入黑暗之中⋯');
+    },
+    examine_runes: () => {
+      if (GameState.spells.includes('lumos')) {
+        GameState.int += 1;
+        showToast('符文揭示了古老的秘密！智力 +1');
+        addXP(20);
+      } else {
+        showToast('你需要螢光閃爍才能閱讀符文。');
+      }
+    },
+    open_tome: () => {
+      if (!GameState.spells.includes('stupefy')) {
+        GameState.spells.push('stupefy');
+        showToast('✨ 從古老典籍中學會了乒乓去！');
+        addXP(35);
+      } else {
+        GameState.int += 1;
+        showToast('深入研究提升了你的智慧。智力 +1');
+        addXP(15);
+      }
+    },
+    search_spell: () => {
+      const unknown = Object.keys(SPELLS).filter(s => !GameState.spells.includes(s));
+      if (unknown.length > 0) {
+        const spell = unknown[Math.floor(Math.random() * unknown.length)];
+        GameState.spells.push(spell);
+        showToast(`✨ 發現了：${SPELLS[spell].name}！`);
+        addXP(30);
+      } else {
+        showToast('你已經學會了所有可用的咒語！');
+      }
+    },
+    duel_attack: () => {
+      castSpellEffect();
+      if (GameState.str >= 7) {
+        GameState.gold += 20;
+        showToast('⚔️ 你贏得了決鬥！金幣 +20');
+        addXP(35);
+      } else {
+        GameState.hp = Math.max(10, GameState.hp - 20);
+        showToast('你的攻擊被擋下了！血量 -20');
+      }
+      logMessage('咒語在競技場上飛舞！');
+    },
+    duel_defend: () => {
+      castSpellEffect();
+      if (GameState.def >= 6) {
+        GameState.str += 1;
+        showToast('🛡️ 完美防禦！你成功反擊！力量 +1');
+        addXP(30);
+      } else {
+        GameState.hp = Math.max(10, GameState.hp - 10);
+        showToast('護盾破碎！血量 -10');
+      }
+    },
+    duel_stun: () => {
+      castSpellEffect();
+      if (GameState.int >= 8 && GameState.spells.includes('stupefy')) {
+        GameState.gold += 30;
+        showToast('⚡ 乒乓去命中！大獲全勝！金幣 +30');
+        addXP(45);
+      } else {
+        GameState.hp = Math.max(10, GameState.hp - 15);
+        showToast('你的咒語失效了！血量 -15');
+      }
+    },
+    learn_patronus: () => {
+      if (GameState.cha >= 8) {
+        if (!GameState.spells.includes('patronus')) {
+          GameState.spells.push('patronus');
+          castSpellEffect();
+          showToast('🦌 你學會了護法咒語！');
+          addXP(60);
+        } else {
+          showToast('你已經學會了護法咒語。');
+        }
+      } else {
+        showToast('你缺乏內在的力量⋯（需要魅力 8）');
+      }
+    },
+    ask_identity: () => {
+      if (GameState.cha >= 9) {
+        showToast('他揭露了自己是傳奇巫師的身分！');
+        addXP(20);
+        GameState.cha += 1;
+      } else {
+        showToast('「有些問題，不知道答案比較好。」');
+      }
+    },
+    take_artifact: () => {
+      addItem('amulet', '魔法護符', '🔮', 1);
+      GameState.def += 2;
+      showToast('🔮 獲得了魔法護符！防禦 +2');
+      addXP(40);
+    },
+    mirror_gaze: () => {
+      showToast('魔鏡展現了你成為偉大巫師的未來⋯');
+      addXP(15);
+      GameState.cha += 1;
+    },
+    search_room: () => {
+      if (Math.random() > 0.4) {
+        GameState.gold += 50;
+        showToast('🪙 發現隱藏的寶藏！金幣 +50');
+        addXP(25);
+      } else {
+        showToast('房間變換了——這次什麼都沒找到。');
+      }
+    },
+    riddle: () => {
+      if (GameState.int >= 7) {
+        showToast('回答正確！騎士鞠躬讓你通過。');
+        addXP(20);
+      } else {
+        showToast('答錯了！階梯突然轉向。');
+      }
+    },
+    study_stars: () => {
+      GameState.int += 1;
+      showToast('星象揭示了奧秘。智力 +1');
+      addXP(15);
+    },
+    signal_forest: () => {
+      if (GameState.spells.includes('patronus')) {
+        castSpellEffect();
+        showToast('🦌 你的護法照亮了整片森林！');
+        addXP(30);
+        addItem('feather', '鳳凰羽毛', '🪶', 1);
+      } else {
+        showToast('你的信號消失在黑暗之中⋯');
+      }
+    },
+    rest: () => {
+      GameState.hp = Math.min(GameState.maxHp, GameState.hp + 20);
+      GameState.mana = Math.min(GameState.maxMana, GameState.mana + 30);
+      showToast('🌙 你在寧靜中休息。血量 +20，魔力 +30');
+      logMessage('寧靜的夜空恢復了你的能量。');
+    },
+  };
+  if (actions[action]) {
+    actions[action]();
+    updateUI();
+  }
+}
+
+// ============ HELPERS ============
+function addItem(id, name, icon, count) {
+  const existing = GameState.inventory.find(i => i.id === id);
+  if (existing) existing.count += count;
+  else GameState.inventory.push({ id, name, icon, count });
+}
+
+function addXP(amount) {
+  GameState.xp += amount;
+  while (GameState.xp >= GameState.xpNext) {
+    GameState.xp -= GameState.xpNext;
+    GameState.level += 1;
+    GameState.xpNext = Math.floor(GameState.xpNext * 1.5);
+    GameState.maxHp += 10;
+    GameState.maxMana += 10;
+    GameState.hp = GameState.maxHp;
+    GameState.mana = GameState.maxMana;
+    showToast(`🌟 升級了！你現在是等級 ${GameState.level}！`);
+  }
+  logMessage(`+${amount} 經驗值`);
+}
+
+function updateQuest(questId, progress) {
+  const q = GameState.quests.find(q => q.id === questId);
+  if (q) q.progress = progress;
+}
+
+function logMessage(msg) {
+  document.getElementById('logEntry').innerHTML = `<span class="log-time">▸</span> ${msg}`;
+}
+
+function castSpellEffect() {
+  const el = document.getElementById('spellFlash');
+  el.classList.add('active');
+  setTimeout(() => el.classList.remove('active'), 300);
+  GameState.mana = Math.max(0, GameState.mana - 10);
+}
+
+// ============ LOAD SCENE ============
+function loadScene(sceneId) {
+  const scene = SCENES[sceneId];
+  if (!scene) return;
+  GameState.currentScene = sceneId;
+  document.getElementById('locationName').textContent = scene.location;
+  document.getElementById('sceneArt').innerHTML = getSceneArt(scene.art);
+  document.getElementById('narrativeText').innerHTML = scene.narrative;
+
+  const choicesEl = document.getElementById('sceneChoices');
+  choicesEl.innerHTML = '';
+  scene.choices.forEach(choice => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.innerHTML = `<span class="choice-key">${choice.icon}</span>${choice.text}`;
+    btn.onclick = () => {
+      if (choice.action) {
+        handleAction(choice.action);
+        loadScene(sceneId);
+      } else if (choice.scene) {
+        loadScene(choice.scene);
+      }
+    };
+    choicesEl.appendChild(btn);
+  });
+  updateUI();
+}
+
+// ============ UPDATE UI ============
+function updateUI() {
+  document.getElementById('healthVal').textContent = GameState.hp;
+  document.getElementById('manaVal').textContent = GameState.mana;
+  document.getElementById('goldVal').textContent = GameState.gold;
+  document.getElementById('playerLevel').textContent = GameState.level;
+  document.getElementById('xpFill').style.width = `${(GameState.xp / GameState.xpNext) * 100}%`;
+  document.getElementById('statStr').textContent = GameState.str;
+  document.getElementById('statInt').textContent = GameState.int;
+  document.getElementById('statCha').textContent = GameState.cha;
+  document.getElementById('statDef').textContent = GameState.def;
+
+  const spellList = document.getElementById('spellList');
+  spellList.innerHTML = '';
+  GameState.spells.forEach(sid => {
+    const sp = SPELLS[sid];
+    if (!sp) return;
+    const div = document.createElement('div');
+    div.className = 'spell-item';
+    div.innerHTML = `<span class="spell-icon">${sp.icon}</span><div><span class="spell-name">${sp.name}</span><br><span class="spell-name-latin">${sp.latin}</span></div><span class="spell-cost">${sp.cost}⚡</span>`;
+    div.title = sp.desc;
+    spellList.appendChild(div);
+  });
+
+  const invGrid = document.getElementById('inventoryGrid');
+  invGrid.innerHTML = '';
+  for (let i = 0; i < 9; i++) {
+    const slot = document.createElement('div');
+    slot.className = 'inv-slot';
+    if (GameState.inventory[i]) {
+      slot.classList.add('has-item');
+      slot.innerHTML = `${GameState.inventory[i].icon}${GameState.inventory[i].count > 1 ? `<span class="inv-count">×${GameState.inventory[i].count}</span>` : ''}`;
+      slot.title = GameState.inventory[i].name;
+    }
+    invGrid.appendChild(slot);
+  }
+
+  const questList = document.getElementById('questList');
+  questList.innerHTML = '';
+  GameState.quests.forEach(q => {
+    const div = document.createElement('div');
+    div.className = 'quest-item';
+    div.innerHTML = `
+      <div class="quest-title">${q.progress >= 100 ? '✅ ' : ''}${q.title}</div>
+      <div class="quest-desc">${q.desc}</div>
+      <div class="quest-progress"><div class="quest-progress-fill" style="width:${q.progress}%"></div></div>
+    `;
+    questList.appendChild(div);
+  });
+}
+
+// ============ START GAME ============
+function startGame() {
+  if (!selectedHouse) {
+    showToast('請先選擇一個學院！');
+    return;
+  }
+  const name = document.getElementById('wizardName').value.trim() || '巫師';
+  GameState.name = name;
+  const hd = HOUSE_DATA[GameState.house];
+  document.getElementById('playerName').textContent = name;
+  document.getElementById('playerHouse').textContent = hd.name;
+  document.getElementById('playerAvatar').textContent = hd.emoji;
+  document.getElementById('playerAvatar').style.borderColor = hd.color;
+  showScreen('game-screen');
+  loadScene('great_hall');
+  logMessage(`歡迎來到魔法世界，${hd.name}的${name}！`);
+}
+
+function togglePanel(side) {
+  const panel = side === 'left' ? document.getElementById('leftPanel') : document.getElementById('rightPanel');
+  const otherPanel = side === 'left' ? document.getElementById('rightPanel') : document.getElementById('leftPanel');
+
+  // Close other panel first
+  otherPanel.classList.remove('mobile-open');
+
+  const isOpening = !panel.classList.contains('mobile-open');
+  panel.classList.toggle('mobile-open');
+
+  // Handle overlay
+  let overlay = document.getElementById('mobileOverlay');
+  if (isOpening) {
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'mobileOverlay';
+      overlay.className = 'mobile-overlay';
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:45;';
+      overlay.onclick = () => {
+        panel.classList.remove('mobile-open');
+        overlay.remove();
+      };
+      document.body.appendChild(overlay);
+    }
+  } else {
+    if (overlay) overlay.remove();
+  }
+}
+
+// Prevent iOS rubber-band bounce on game screen
+document.addEventListener('touchmove', function(e) {
+  const gameScreen = document.getElementById('game-screen');
+  if (gameScreen && gameScreen.classList.contains('active')) {
+    const target = e.target;
+    const scrollable = target.closest('.scene-narrative, .scene-choices, .left-panel, .right-panel, .mobile-overlay');
+    if (!scrollable) {
+      // Allow scroll only within scrollable containers
+    }
+  }
+}, { passive: true });
+</script>
+</body>
+</html>
