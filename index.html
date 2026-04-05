@@ -193,9 +193,19 @@ html, body {
 #character-screen {
   background: radial-gradient(ellipse at 50% 30%, #1a1035 0%, #0a0a1a 70%);
   justify-content: flex-start;
-  padding: 40px 0;
-  padding-top: max(40px, env(safe-area-inset-top, 40px));
-  padding-bottom: max(40px, env(safe-area-inset-bottom, 40px));
+  align-items: stretch;
+  padding: 0;
+}
+
+.screen-scroll-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  min-height: 100%;
+  padding: 40px 16px 60px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .char-header {
@@ -853,7 +863,10 @@ html, body {
   /* Character screen: full scroll */
   #character-screen {
     justify-content: flex-start;
-    padding: 24px 0 40px;
+  }
+
+  .screen-scroll-inner {
+    padding: 24px 12px 80px;
   }
 
   .char-header {
@@ -1152,6 +1165,7 @@ html, body {
 
 <!-- ============ CHARACTER SCREEN ============ -->
 <div class="screen" id="character-screen">
+  <div class="screen-scroll-inner">
   <h2 class="char-header">選擇你的命運</h2>
   <p class="char-sub">選擇你的學院</p>
 
@@ -1178,7 +1192,7 @@ html, body {
         <span><span class="stat-val">9</span>魅力</span>
       </div>
     </div>
-    <div class="house-card" style="--house-color: #0e1a40" onclick="selectHouse(this, 'ravenclaw')" data-house="ravenclaw">
+    <div class="house-card" style="--house-color: #7cb3e8" onclick="selectHouse(this, 'ravenclaw')" data-house="ravenclaw">
       <span class="house-crest">🦅</span>
       <div class="house-name">雷文克勞</div>
       <div class="house-name-en">Ravenclaw</div>
@@ -1210,6 +1224,7 @@ html, body {
   <button class="btn-magic" onclick="startGame()">
     ✦ 進入魔法世界 ✦
   </button>
+  </div>
 </div>
 
 <!-- ============ GAME SCREEN ============ -->
@@ -1407,7 +1422,7 @@ function selectHouse(el, house) {
 const HOUSE_DATA = {
   gryffindor: { emoji: '🦁', color: '#ae0001', name: '葛萊分多' },
   slytherin:  { emoji: '🐍', color: '#2a623d', name: '史萊哲林' },
-  ravenclaw:  { emoji: '🦅', color: '#0e1a40', name: '雷文克勞' },
+  ravenclaw:  { emoji: '🦅', color: '#7cb3e8', name: '雷文克勞' },
   hufflepuff: { emoji: '🦡', color: '#c89b3c', name: '赫夫帕夫' },
 };
 
