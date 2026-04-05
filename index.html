@@ -1094,6 +1094,66 @@ html, body {
   cursor: pointer;
 }
 
+/* ============ MUSIC TOGGLE ============ */
+.music-toggle {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 300;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(10,10,26,0.8);
+  border: 1px solid rgba(212,168,67,0.3);
+  color: var(--gold);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.music-toggle:hover {
+  border-color: var(--gold);
+  background: rgba(212,168,67,0.15);
+  box-shadow: 0 0 16px rgba(212,168,67,0.2);
+}
+
+.music-toggle.playing .bar {
+  animation: soundBar 0.6s ease-in-out infinite alternate;
+}
+
+.music-toggle .bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 14px;
+}
+
+.music-toggle .bar {
+  width: 3px;
+  background: var(--gold);
+  border-radius: 1px;
+  transition: height 0.2s ease;
+}
+
+.music-toggle:not(.playing) .bar {
+  height: 3px !important;
+}
+
+.music-toggle .bar:nth-child(1) { height: 6px; animation-delay: 0s; }
+.music-toggle .bar:nth-child(2) { height: 10px; animation-delay: 0.15s; }
+.music-toggle .bar:nth-child(3) { height: 14px; animation-delay: 0.3s; }
+.music-toggle .bar:nth-child(4) { height: 8px; animation-delay: 0.45s; }
+
+@keyframes soundBar {
+  0% { transform: scaleY(0.3); }
+  100% { transform: scaleY(1); }
+}
+
 /* ============ SCROLLBAR ============ */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -1105,6 +1165,16 @@ html, body {
 <canvas id="starfield"></canvas>
 <div class="spell-flash" id="spellFlash"></div>
 <div class="toast" id="toast"></div>
+
+<!-- Music Toggle -->
+<button class="music-toggle" id="musicToggle" onclick="toggleMusic()" title="背景音樂">
+  <div class="bars">
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+  </div>
+</button>
 
 <!-- ============ TITLE SCREEN ============ -->
 <div class="screen active" id="title-screen">
@@ -1318,6 +1388,196 @@ html, body {
 </div>
 
 <script>
+// ============ MAGICAL BACKGROUND MUSIC (Web Audio API) ============
+const MusicEngine = {
+  ctx: null,
+  playing: false,
+  masterGain: null,
+  nodes: [],
+  timeouts: [],
+
+  init() {
+    if (this.ctx) return;
+    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    this.masterGain = this.ctx.createGain();
+    this.masterGain.gain.value = 0.25;
+    this.masterGain.connect(this.ctx.destination);
+  },
+
+  // Convert note name to frequency
+  noteFreq(note, octave) {
+    const notes = { C:0, 'C#':1, D:2, 'D#':3, E:4, F:5, 'F#':6, G:7, 'G#':8, A:9, 'A#':10, B:11 };
+    return 440 * Math.pow(2, (notes[note] - 9) / 12 + (octave - 4));
+  },
+
+  // Play a single celesta/music-box tone
+  playTone(freq, startTime, duration, volume = 0.3, type = 'sine') {
+    const ctx = this.ctx;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+
+    // Main tone (sine for music box purity)
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(volume, startTime);
+    gain.gain.exponentialRampToValueAtTime(volume * 0.6, startTime + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+    osc.connect(gain);
+    gain.connect(this.masterGain);
+    osc.start(startTime);
+    osc.stop(startTime + duration);
+
+    // Overtone (3x freq, quiet) for shimmer
+    osc2.type = 'sine';
+    osc2.frequency.value = freq * 3;
+    gain2.gain.setValueAtTime(volume * 0.08, startTime);
+    gain2.gain.exponentialRampToValueAtTime(0.001, startTime + duration * 0.6);
+    osc2.connect(gain2);
+    gain2.connect(this.masterGain);
+    osc2.start(startTime);
+    osc2.stop(startTime + duration);
+
+    this.nodes.push(osc, osc2);
+  },
+
+  // Pad chord (soft sustained background)
+  playPad(freqs, startTime, duration, volume = 0.04) {
+    freqs.forEach(freq => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.001, startTime);
+      gain.gain.linearRampToValueAtTime(volume, startTime + duration * 0.3);
+      gain.gain.linearRampToValueAtTime(0.001, startTime + duration);
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+      osc.start(startTime);
+      osc.stop(startTime + duration + 0.1);
+      this.nodes.push(osc);
+    });
+  },
+
+  // The magical melody — celesta style, Hedwig-inspired mood
+  playMelody() {
+    if (!this.playing) return;
+    const ctx = this.ctx;
+    const now = ctx.currentTime + 0.1;
+    const bpm = 72;
+    const beat = 60 / bpm;
+    const n = (note, oct) => this.noteFreq(note, oct);
+
+    // === Melody pattern (dreamy, mysterious, magical) ===
+    const melody = [
+      // Phrase 1 — ascending wonder
+      ['B', 4, 0,    beat * 1],
+      ['E', 5, beat * 1, beat * 1.5],
+      ['G', 5, beat * 2.5, beat * 0.5],
+      ['F#',5, beat * 3, beat * 1],
+      ['E', 5, beat * 4, beat * 2],
+      ['B', 5, beat * 6, beat * 1],
+      ['A', 5, beat * 7, beat * 3],
+
+      // Phrase 2 — gentle descent
+      ['F#',5, beat * 10, beat * 3],
+      ['E', 5, beat * 13, beat * 1],
+      ['G', 5, beat * 14, beat * 0.5],
+      ['F#',5, beat * 14.5, beat * 1],
+      ['D#',5, beat * 15.5, beat * 1.5],
+      ['F', 5, beat * 17, beat * 1],
+      ['B', 4, beat * 18, beat * 3],
+
+      // Phrase 3 — rising mystery
+      ['B', 4, beat * 22, beat * 1],
+      ['E', 5, beat * 23, beat * 1.5],
+      ['G', 5, beat * 24.5, beat * 0.5],
+      ['F#',5, beat * 25, beat * 1],
+      ['E', 5, beat * 26, beat * 2],
+      ['B', 5, beat * 28, beat * 1],
+      ['D', 6, beat * 29, beat * 1],
+      ['C#',6, beat * 30, beat * 1],
+      ['C', 6, beat * 31, beat * 1],
+
+      // Phrase 4 — resolution
+      ['G#',5, beat * 32, beat * 1.5],
+      ['A', 5, beat * 33.5, beat * 1],
+      ['F#',5, beat * 34.5, beat * 1.5],
+      ['A', 5, beat * 36, beat * 1],
+      ['E', 5, beat * 37, beat * 4],
+    ];
+
+    // Play melody notes
+    melody.forEach(([note, oct, offset, dur]) => {
+      this.playTone(n(note, oct), now + offset, dur, 0.25);
+    });
+
+    // === Background pads (harmony) ===
+    const pads = [
+      [[n('E',3), n('B',3), n('E',4)], 0, beat * 10],
+      [[n('C',3), n('E',3), n('A',3)], beat * 10, beat * 6],
+      [[n('B',2), n('D#',3), n('F#',3)], beat * 16, beat * 6],
+      [[n('E',3), n('B',3), n('E',4)], beat * 22, beat * 10],
+      [[n('A',2), n('C#',3), n('E',3)], beat * 32, beat * 5],
+      [[n('E',3), n('G#',3), n('B',3)], beat * 37, beat * 5],
+    ];
+
+    pads.forEach(([freqs, offset, dur]) => {
+      this.playPad(freqs, now + offset, dur, 0.035);
+    });
+
+    // === Twinkling high notes (random sparkle) ===
+    for (let i = 0; i < 12; i++) {
+      const sparkleTime = now + beat * 2 + Math.random() * beat * 38;
+      const sparkleNotes = [n('E',6), n('G#',6), n('B',6), n('E',7), n('F#',6), n('A',6)];
+      const sparkleFreq = sparkleNotes[Math.floor(Math.random() * sparkleNotes.length)];
+      this.playTone(sparkleFreq, sparkleTime, beat * 0.5, 0.06 + Math.random() * 0.04);
+    }
+
+    // Loop after melody ends
+    const loopDuration = beat * 42 * 1000;
+    const timeout = setTimeout(() => {
+      if (this.playing) this.playMelody();
+    }, loopDuration);
+    this.timeouts.push(timeout);
+  },
+
+  start() {
+    this.init();
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+    this.playing = true;
+    this.playMelody();
+  },
+
+  stop() {
+    this.playing = false;
+    this.timeouts.forEach(t => clearTimeout(t));
+    this.timeouts = [];
+    // Fade out
+    if (this.masterGain) {
+      this.masterGain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 0.5);
+      setTimeout(() => {
+        this.nodes.forEach(n => { try { n.stop(); } catch(e){} });
+        this.nodes = [];
+        if (this.masterGain) this.masterGain.gain.value = 0.25;
+      }, 600);
+    }
+  }
+};
+
+function toggleMusic() {
+  const btn = document.getElementById('musicToggle');
+  if (MusicEngine.playing) {
+    MusicEngine.stop();
+    btn.classList.remove('playing');
+    showToast('🔇 音樂已關閉');
+  } else {
+    MusicEngine.start();
+    btn.classList.add('playing');
+    showToast('🎵 魔法旋律響起⋯');
+  }
+}
 // ============ STARFIELD ============
 const canvas = document.getElementById('starfield');
 const ctx = canvas.getContext('2d');
