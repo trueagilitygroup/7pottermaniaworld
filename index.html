@@ -1403,8 +1403,34 @@ const MusicEngine = {
     if (this.ctx) return;
     this.ctx = new (window.AudioContext || window.webkitAudioContext)();
     this.masterGain = this.ctx.createGain();
-    this.masterGain.gain.value = 0.25;
-    this.masterGain.connect(this.ctx.destination);
+    this.masterGain.gain.value = 0.3;
+
+    // Reverb convolver for concert hall feel
+    this.reverb = this.ctx.createConvolver();
+    this.reverbGain = this.ctx.createGain();
+    this.reverbGain.gain.value = 0.25;
+    this.dryGain = this.ctx.createGain();
+    this.dryGain.gain.value = 0.75;
+    this.createReverb();
+    this.masterGain.connect(this.dryGain);
+    this.dryGain.connect(this.ctx.destination);
+    this.masterGain.connect(this.reverb);
+    this.reverb.connect(this.reverbGain);
+    this.reverbGain.connect(this.ctx.destination);
+  },
+
+  // Generate simple reverb impulse response
+  createReverb() {
+    const rate = this.ctx.sampleRate;
+    const length = rate * 2.5;
+    const impulse = this.ctx.createBuffer(2, length, rate);
+    for (let ch = 0; ch < 2; ch++) {
+      const data = impulse.getChannelData(ch);
+      for (let i = 0; i < length; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, 2.5);
+      }
+    }
+    this.reverb.buffer = impulse;
   },
 
   // Convert note name to frequency
@@ -1413,57 +1439,103 @@ const MusicEngine = {
     return 440 * Math.pow(2, (notes[note] - 9) / 12 + (octave - 4));
   },
 
-  // Play a single celesta/music-box tone
-  playTone(freq, startTime, duration, volume = 0.3, type = 'sine') {
+  // Piano tone — multiple harmonics with realistic envelope
+  playTone(freq, startTime, duration, volume = 0.3) {
     const ctx = this.ctx;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    const osc2 = ctx.createOscillator();
-    const gain2 = ctx.createGain();
+    const noteGain = ctx.createGain();
+    noteGain.connect(this.masterGain);
 
-    // Main tone (sine for music box purity)
-    osc.type = 'sine';
-    osc.frequency.value = freq;
-    gain.gain.setValueAtTime(volume, startTime);
-    gain.gain.exponentialRampToValueAtTime(volume * 0.6, startTime + 0.05);
-    gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
-    osc.connect(gain);
-    gain.connect(this.masterGain);
-    osc.start(startTime);
-    osc.stop(startTime + duration);
+    // Piano harmonics: fundamental + partials with decreasing amplitude
+    const harmonics = [
+      { ratio: 1,    amp: 1.0  },  // fundamental
+      { ratio: 2,    amp: 0.45 },  // octave
+      { ratio: 3,    amp: 0.18 },  // 5th above octave
+      { ratio: 4,    amp: 0.12 },  // 2nd octave
+      { ratio: 5,    amp: 0.05 },  // major 3rd above 2nd octave
+      { ratio: 6,    amp: 0.03 },  // 5th above 2nd octave
+      { ratio: 7,    amp: 0.02 },  // minor 7th (adds warmth)
+    ];
 
-    // Overtone (3x freq, quiet) for shimmer
-    osc2.type = 'sine';
-    osc2.frequency.value = freq * 3;
-    gain2.gain.setValueAtTime(volume * 0.08, startTime);
-    gain2.gain.exponentialRampToValueAtTime(0.001, startTime + duration * 0.6);
-    osc2.connect(gain2);
-    gain2.connect(this.masterGain);
-    osc2.start(startTime);
-    osc2.stop(startTime + duration);
+    harmonics.forEach(h => {
+      const osc = ctx.createOscillator();
+      const hGain = ctx.createGain();
 
-    this.nodes.push(osc, osc2);
+      osc.type = 'sine';
+      osc.frequency.value = freq * h.ratio;
+
+      // Higher harmonics decay faster (like real piano strings)
+      const decayTime = duration * (1 / (1 + h.ratio * 0.15));
+
+      hGain.gain.setValueAtTime(0.001, startTime);
+      // Sharp attack (hammer strike)
+      hGain.gain.linearRampToValueAtTime(volume * h.amp, startTime + 0.005);
+      // Quick initial drop (hammer release)
+      hGain.gain.exponentialRampToValueAtTime(volume * h.amp * 0.5, startTime + 0.04);
+      // Slow sustain decay
+      hGain.gain.exponentialRampToValueAtTime(0.001, startTime + decayTime);
+
+      osc.connect(hGain);
+      hGain.connect(noteGain);
+      osc.start(startTime);
+      osc.stop(startTime + decayTime + 0.05);
+      this.nodes.push(osc);
+    });
+
+    // Hammer noise — brief burst for attack realism
+    const bufferSize = ctx.sampleRate * 0.015;
+    const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const noiseData = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      noiseData[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+    }
+    const noiseSrc = ctx.createBufferSource();
+    const noiseGain = ctx.createGain();
+    const noiseFilter = ctx.createBiquadFilter();
+    noiseSrc.buffer = noiseBuffer;
+    noiseFilter.type = 'bandpass';
+    noiseFilter.frequency.value = freq * 4;
+    noiseFilter.Q.value = 2;
+    noiseGain.gain.setValueAtTime(volume * 0.15, startTime);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.03);
+    noiseSrc.connect(noiseFilter);
+    noiseFilter.connect(noiseGain);
+    noiseGain.connect(noteGain);
+    noiseSrc.start(startTime);
+    noiseSrc.stop(startTime + 0.04);
+    this.nodes.push(noiseSrc);
   },
 
-  // Pad chord (soft sustained background)
+  // Pad chord — soft sustained piano chords
   playPad(freqs, startTime, duration, volume = 0.04) {
     freqs.forEach(freq => {
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
+      const ctx = this.ctx;
+      const osc = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      // Warm pad: two detuned sines
       osc.type = 'sine';
       osc.frequency.value = freq;
+      osc2.type = 'sine';
+      osc2.frequency.value = freq * 1.002; // slight detune for warmth
+
       gain.gain.setValueAtTime(0.001, startTime);
-      gain.gain.linearRampToValueAtTime(volume, startTime + duration * 0.3);
+      gain.gain.linearRampToValueAtTime(volume, startTime + duration * 0.2);
+      gain.gain.linearRampToValueAtTime(volume * 0.6, startTime + duration * 0.7);
       gain.gain.linearRampToValueAtTime(0.001, startTime + duration);
+
       osc.connect(gain);
+      osc2.connect(gain);
       gain.connect(this.masterGain);
       osc.start(startTime);
+      osc2.start(startTime);
       osc.stop(startTime + duration + 0.1);
-      this.nodes.push(osc);
+      osc2.stop(startTime + duration + 0.1);
+      this.nodes.push(osc, osc2);
     });
   },
 
-  // The magical melody — celesta style, Hedwig-inspired mood
+  // The magical melody — piano, mysterious and enchanting
   playMelody() {
     if (!this.playing) return;
     const ctx = this.ctx;
@@ -1530,12 +1602,12 @@ const MusicEngine = {
       this.playPad(freqs, now + offset, dur, 0.035);
     });
 
-    // === Twinkling high notes (random sparkle) ===
-    for (let i = 0; i < 12; i++) {
-      const sparkleTime = now + beat * 2 + Math.random() * beat * 38;
-      const sparkleNotes = [n('E',6), n('G#',6), n('B',6), n('E',7), n('F#',6), n('A',6)];
+    // === Gentle high piano sparkle ===
+    for (let i = 0; i < 8; i++) {
+      const sparkleTime = now + beat * 4 + Math.random() * beat * 36;
+      const sparkleNotes = [n('E',6), n('G#',6), n('B',5), n('E',7), n('F#',6), n('A',5)];
       const sparkleFreq = sparkleNotes[Math.floor(Math.random() * sparkleNotes.length)];
-      this.playTone(sparkleFreq, sparkleTime, beat * 0.5, 0.06 + Math.random() * 0.04);
+      this.playTone(sparkleFreq, sparkleTime, beat * 1.5, 0.06 + Math.random() * 0.03);
     }
 
     // Loop after melody ends
@@ -1578,7 +1650,7 @@ function toggleMusic() {
   } else {
     MusicEngine.start();
     btn.classList.add('playing');
-    showToast('🎵 魔法旋律響起⋯');
+    showToast('🎹 魔法鋼琴旋律響起⋯');
   }
 }
 // ============ STARFIELD ============
