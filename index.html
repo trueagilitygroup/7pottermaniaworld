@@ -1643,13 +1643,14 @@ const GameState = {
   str: 7, int: 7, cha: 7, def: 5,
   spells: ['lumos', 'expelliarmus'],
   inventory: [
-    { id: 'wand', name: '接骨木魔杖', icon: '🪄', count: 1 },
-    { id: 'potion_hp', name: '治療藥水', icon: '🧪', count: 3 },
-    { id: 'book', name: '咒語大全', icon: '📖', count: 1 },
+    { id: 'wand', name: '魔杖', icon: '🪄', count: 1 },
+    { id: 'potion_hp', name: '白鮮液', icon: '🧪', count: 3 },
+    { id: 'book', name: '標準咒語書', icon: '📖', count: 1 },
   ],
   quests: [
-    { id: 'q1', title: '分類儀式', desc: '找到你在學校的歸屬。', progress: 100 },
-    { id: 'q2', title: '第一堂課', desc: '參加你的第一堂魔藥學課。', progress: 0 },
+    { id: 'q1', title: '分類帽儀式', desc: '接受分類帽的選擇，找到你的學院歸屬。', progress: 100 },
+    { id: 'q2', title: '石內卜的魔藥課', desc: '參加賽佛勒斯·石內卜教授的第一堂魔藥學課。', progress: 0 },
+    { id: 'q3', title: '海格的邀請', desc: '拜訪魯霸·海格的小屋，了解禁忌森林的秘密。', progress: 0 },
   ],
   currentScene: 'great_hall',
   flags: {}
@@ -1657,12 +1658,15 @@ const GameState = {
 
 // ============ SPELLS DATA ============
 const SPELLS = {
-  lumos:        { name: '螢光閃爍', latin: 'Lumos',        icon: '💡', cost: 5,  desc: '創造光芒' },
-  expelliarmus: { name: '去去武器走', latin: 'Expelliarmus', icon: '⚔️', cost: 15, desc: '繳械對手' },
-  protego:      { name: '破心護',   latin: 'Protego',      icon: '🛡️', cost: 20, desc: '防護咒語' },
-  stupefy:      { name: '乒乓去',   latin: 'Stupefy',      icon: '⚡', cost: 25, desc: '昏擊咒語' },
-  accio:        { name: '速速前',   latin: 'Accio',        icon: '🫳', cost: 10, desc: '召喚物品' },
-  patronus:     { name: '乘乘護法', latin: 'Patronus',     icon: '🦌', cost: 50, desc: '守護靈咒' },
+  lumos:        { name: '路摸思',     latin: 'Lumos',         icon: '💡', cost: 5,   desc: '創造光芒' },
+  expelliarmus: { name: '去去武器走', latin: 'Expelliarmus',  icon: '⚔️', cost: 15,  desc: '繳械對手' },
+  protego:      { name: '破心護',     latin: 'Protego',       icon: '🛡️', cost: 20,  desc: '防護咒語' },
+  stupefy:      { name: '咄咄失',     latin: 'Stupefy',       icon: '⚡', cost: 25,  desc: '昏擊咒語' },
+  accio:        { name: '速速前',     latin: 'Accio',         icon: '🫳', cost: 10,  desc: '召喚物品' },
+  patronus:     { name: '乘乘護法',   latin: 'Expecto Patronum', icon: '🦌', cost: 50, desc: '守護靈咒' },
+  incendio:     { name: '吼吼燒',     latin: 'Incendio',      icon: '🔥', cost: 15,  desc: '噴射火焰' },
+  aguamenti:    { name: '水水噴',     latin: 'Aguamenti',     icon: '💧', cost: 10,  desc: '噴射水流' },
+  confringo:    { name: '爆爆炸',     latin: 'Confringo',     icon: '💥', cost: 30,  desc: '爆破咒語' },
 };
 
 // ============ HOUSE SELECT ============
@@ -1694,18 +1698,19 @@ const SCENES = {
   great_hall: {
     location: '大禮堂',
     art: 'great_hall',
-    narrative: `<span class="highlight">大禮堂</span>的魔法天花板閃爍著千盞浮空蠟燭，映照著頭頂的星空。長長的學院餐桌在你面前延伸，擺滿金色餐盤。空氣中瀰漫著低語的咒語與興奮的交談聲。你在魔法學校的旅程，從這裡開始。`,
+    narrative: `<span class="highlight">大禮堂</span>的魔法天花板閃爍著千盞浮空蠟燭，映照著頭頂的星空。<span class="highlight">鄧不利多</span>校長坐在教職員長桌的正中央，銀色長鬚在燭光中微微閃動。<span class="highlight">麥米奈娃</span>教授嚴肅地巡視著學院餐桌。差點沒頭的乃乃從你身旁飄過，友善地向你點頭致意。你在霍格華茲的旅程，從這裡開始。`,
     choices: [
       { text: '探索地下城', scene: 'dungeons', icon: '🕯️' },
       { text: '前往圖書館', scene: 'library', icon: '📚' },
       { text: '走向中庭', scene: 'courtyard', icon: '🏰' },
       { text: '攀登大階梯', scene: 'staircase', icon: '🪜' },
+      { text: '拜訪海格的小屋', scene: 'hagrid', icon: '🏡' },
     ]
   },
   dungeons: {
     location: '地下城',
     art: 'dungeons',
-    narrative: `冰冷的石牆上滲出水珠，你走進了<span class="highlight">地下城</span>。走廊上的火把忽明忽暗，投射出舞動的陰影。魔藥學教室的門半開著——裡面的坩堝冒著神秘的泡泡。架子上一個發光的藥瓶引起了你的注意⋯`,
+    narrative: `冰冷的石牆上滲出水珠，你走進了<span class="highlight">地下城</span>。走廊上的火把忽明忽暗，投射出舞動的陰影。<span class="highlight">石內卜</span>教授的魔藥學教室門半開著——裡面的坩堝冒著神秘的泡泡。架子上一瓶<span class="highlight">白鮮液</span>旁邊，有個發光的藥瓶引起了你的注意⋯`,
     choices: [
       { text: '拿起發光的藥瓶', action: 'take_vial', icon: '🧪' },
       { text: '參加魔藥學課', scene: 'potions_class', icon: '⚗️' },
@@ -1716,7 +1721,7 @@ const SCENES = {
   library: {
     location: '圖書館',
     art: 'library',
-    narrative: `高聳的書架在頭頂延伸至黑暗中。<span class="highlight">圖書館</span>異常安靜——只有羽毛筆的沙沙聲和翻頁的窸窣聲打破寂靜。禁書區在天鵝絨繩索後方隱隱發光。閱覽桌上一本佈滿灰塵的書似乎在散發魔法能量。`,
+    narrative: `高聳的書架在頭頂延伸至黑暗中。<span class="highlight">平斯夫人</span>在櫃台後方警惕地注視著每個人。<span class="highlight">圖書館</span>異常安靜——只有羽毛筆的沙沙聲和翻頁的窸窣聲。你瞥見<span class="highlight">妙麗·格蘭傑</span>抱著一疊書匆匆走過。禁書區在天鵝絨繩索後方隱隱發光，閱覽桌上一本書似乎在散發魔法能量。`,
     choices: [
       { text: '閱讀那本發光的書', action: 'read_book', icon: '📖' },
       { text: '潛入禁書區', scene: 'restricted', icon: '🚫' },
@@ -1727,7 +1732,7 @@ const SCENES = {
   courtyard: {
     location: '中庭',
     art: 'courtyard',
-    narrative: `陽光傾灑進開放的<span class="highlight">中庭</span>，溫暖著古老的石磚。學生們對著訓練假人練習咒語，貓頭鷹在頭頂盤旋送信。鐘樓上一個穿著黑色斗篷的神秘身影正注視著你。有人向你發起了友誼決鬥的挑戰！`,
+    narrative: `陽光傾灑進開放的<span class="highlight">中庭</span>，溫暖著古老的石磚。<span class="highlight">胡奇夫人</span>正在指導一年級的飛行課，幾把光輪掃帚整齊排列在地上。貓頭鷹在頭頂盤旋送著<span class="highlight">咆哮信</span>。鐘樓上一個穿著黑色斗篷的神秘身影正注視著你。<span class="highlight">跩哥·馬份</span>向你發起了決鬥的挑戰！`,
     choices: [
       { text: '接受決鬥挑戰', scene: 'duel', icon: '⚔️' },
       { text: '調查神秘斗篷人', scene: 'clock_tower', icon: '🕵️' },
@@ -1738,7 +1743,7 @@ const SCENES = {
   staircase: {
     location: '大階梯',
     art: 'staircase',
-    narrative: `<span class="highlight">大階梯</span>無盡地向上延伸，被施了魔法的階梯不斷移動和重新排列，發出深沉的隆隆聲。肖像畫中的人物在你經過時竊竊私語。一道階梯突然轉向——通往一條你從未見過的走廊。一位畫中騎士要求你回答一個謎語。`,
+    narrative: `<span class="highlight">大階梯</span>無盡地向上延伸，被施了魔法的階梯不斷移動和重新排列，發出深沉的隆隆聲。肖像畫中的人物在你經過時竊竊私語——你認出了<span class="highlight">胖夫人</span>守護著葛萊分多的入口。一道階梯突然轉向——通往一條你從未見過的走廊。走廊盡頭，管理員<span class="highlight">乾七</span>的貓「乃乃夫人」正虎視眈眈地盯著你。`,
     choices: [
       { text: '回答謎語', action: 'riddle', icon: '🤔' },
       { text: '跟隨隱藏的走廊', scene: 'hidden_room', icon: '🚪' },
@@ -1749,7 +1754,7 @@ const SCENES = {
   potions_class: {
     location: '魔藥學教室',
     art: 'dungeons',
-    narrative: `嚴厲的魔藥學教授在你入座時審視著你。今天的課程：<span class="highlight">福來福去</span>——液態幸運。材料已經擺在你面前，但配方極其複雜。一步走錯，坩堝就可能爆炸！`,
+    narrative: `<span class="highlight">石內卜</span>教授的黑色長袍在你面前掠過，冰冷的目光審視著你。「今天我們要調製<span class="highlight">福來福去</span>——液態幸運，」他冷冷地說。「我不期望你們之中有人能成功。」材料已經擺在你面前，但配方極其複雜。一步走錯，坩堝就可能爆炸！`,
     choices: [
       { text: '仔細按照配方操作（智力檢定）', action: 'brew_careful', icon: '📋' },
       { text: '憑直覺即興發揮', action: 'brew_improv', icon: '🎲' },
@@ -1764,14 +1769,14 @@ const SCENES = {
     choices: [
       { text: '走向黑暗深處', action: 'descend_dark', icon: '⬇️' },
       { text: '朝光明方向前進', scene: 'hidden_room', icon: '⬆️' },
-      { text: '施放螢光閃爍觀察符文', action: 'examine_runes', icon: '💡' },
+      { text: '施放路摸思觀察符文', action: 'examine_runes', icon: '💡' },
       { text: '返回安全的地方', scene: 'dungeons', icon: '↩️' },
     ]
   },
   restricted: {
     location: '禁書區',
     art: 'library',
-    narrative: `你悄悄溜過天鵝絨繩索，進入了<span class="highlight">禁書區</span>。這裡的書彷彿有生命——一本向你的手指咬來，另一本低聲呼喚你的名字。一本巨大的皮革封面典籍擺在台座上，書頁散發著銀色的光芒。這是強大的魔法⋯`,
+    narrative: `你悄悄溜過天鵝絨繩索，進入了<span class="highlight">禁書區</span>。這裡的書彷彿有生命——<span class="highlight">怪獸的怪獸書</span>向你的手指咬來，另一本低聲呼喚你的名字。一本巨大的皮革封面典籍擺在台座上，書頁散發著銀色的光芒。你隱約感覺到一股黑暗的力量⋯彷彿與<span class="highlight">那個人</span>有關的秘密就藏在這些書頁之間。`,
     choices: [
       { text: '翻開銀光典籍', action: 'open_tome', icon: '📕' },
       { text: '搜尋特定咒語', action: 'search_spell', icon: '🔍' },
@@ -1781,18 +1786,18 @@ const SCENES = {
   duel: {
     location: '決鬥場',
     art: 'courtyard',
-    narrative: `你站在<span class="highlight">決鬥場</span>上，魔杖高舉！對手向你鞠躬後進入戰鬥姿態。圍觀的群眾安靜下來。火花在你的魔杖尖端跳舞，你準備施放第一個咒語。謹慎選擇——你的對手實力不弱！`,
+    narrative: `你站在<span class="highlight">決鬥場</span>上，魔杖高舉！<span class="highlight">跩哥·馬份</span>嘴角帶著嘲笑，向你鞠躬後進入戰鬥姿態。圍觀的群眾安靜下來。<span class="highlight">孚立維</span>教授擔任裁判。火花在你的魔杖尖端跳舞，你準備施放第一個咒語。謹慎選擇——馬份可不是省油的燈！`,
     choices: [
       { text: '施放去去武器走！（力量）', action: 'duel_attack', icon: '⚔️' },
       { text: '施放破心護！（防禦）', action: 'duel_defend', icon: '🛡️' },
-      { text: '施放乒乓去！（智力）', action: 'duel_stun', icon: '⚡' },
+      { text: '施放咄咄失！（智力）', action: 'duel_stun', icon: '⚡' },
       { text: '認輸退出', scene: 'courtyard', icon: '🏳️' },
     ]
   },
   clock_tower: {
     location: '鐘樓',
     art: 'staircase',
-    narrative: `<span class="highlight">鐘樓</span>巨大的齒輪在你頭頂轟然運轉。斗篷人轉過身來——是一位你從未見過的教師。「我一直在觀察你，」他說。「你很有潛力。我可以教你一個強大的咒語⋯如果你夠勇敢的話。」`,
+    narrative: `<span class="highlight">鐘樓</span>巨大的齒輪在你頭頂轟然運轉。斗篷人轉過身來——是<span class="highlight">雷木思·路平</span>教授，黑魔法防禦術的老師。「我一直在觀察你，」他溫和地說。「你有潛力。我可以教你<span class="highlight">乘乘護法</span>咒⋯但這需要你面對自己最深的恐懼。」`,
     choices: [
       { text: '接受提議', action: 'learn_patronus', icon: '✨' },
       { text: '拒絕——這可能是陷阱', scene: 'courtyard', icon: '🚫' },
@@ -1802,7 +1807,7 @@ const SCENES = {
   hidden_room: {
     location: '萬應室',
     art: 'library',
-    narrative: `你找到了——傳說中的<span class="highlight">萬應室</span>！房間化身為一座寶庫，裝滿了數百年來的魔法寶物。一面鏡子映出的不是你的倒影，而是你內心最深的渴望。在這些寶藏之中，有樣東西散發著不可思議的力量。`,
+    narrative: `你找到了——傳說中的<span class="highlight">萬應室</span>！房間化身為一座寶庫，裝滿了數百年來的魔法寶物。角落裡矗立著一面<span class="highlight">意若思鏡</span>——映出的不是你的倒影，而是你內心最深的渴望。你還看到一件<span class="highlight">隱形斗篷</span>和一張破舊的<span class="highlight">劫盜地圖</span>。在這些寶藏之中，有樣東西散發著不可思議的力量。`,
     choices: [
       { text: '拿取閃耀的寶物', action: 'take_artifact', icon: '💎' },
       { text: '注視魔鏡', action: 'mirror_gaze', icon: '🪞' },
@@ -1813,12 +1818,33 @@ const SCENES = {
   astronomy: {
     location: '天文塔',
     art: 'courtyard',
-    narrative: `<span class="highlight">天文塔</span>上可以看到壯麗的校園全景。星辰在天空中燦爛閃耀，禁忌森林在遠方黑暗而無盡地延伸。透過望遠鏡，你發現森林中有什麼東西在移動——巨大而且發出光芒。`,
+    narrative: `<span class="highlight">天文塔</span>上可以看到壯麗的校園全景。星辰在天空中燦爛閃耀，<span class="highlight">禁忌森林</span>在遠方黑暗而無盡地延伸。透過<span class="highlight">全效望遠鏡</span>，你發現森林中有什麼東西在移動——是人馬<span class="highlight">翡冷翠</span>，他的身影巨大而發出光芒。遠處似乎還能看到一隻<span class="highlight">獨角獸</span>的銀色身影。`,
     choices: [
       { text: '研究星象尋找線索', action: 'study_stars', icon: '⭐' },
       { text: '向森林方向發出信號', action: 'signal_forest', icon: '🔦' },
       { text: '享受寧靜的夜景', action: 'rest', icon: '🌙' },
       { text: '下塔離開', scene: 'staircase', icon: '↩️' },
+    ]
+  },
+  hagrid: {
+    location: '海格的小屋',
+    art: 'courtyard',
+    narrative: `<span class="highlight">魯霸·海格</span>的小屋冒著溫暖的炊煙。這位半巨人獵場看守人打開門，露出蓬亂大鬍子後的燦爛笑容。「進來吧！泡杯茶給你！」桌上擺著他親手做的岩皮餅（硬得能崩掉牙齒）。屋角一個木箱裡傳來奇怪的聲響——似乎有什麼<span class="highlight">怪獸</span>在裡面⋯你還注意到牆上掛著一把粉紅色的雨傘。`,
+    choices: [
+      { text: '查看木箱裡的神秘生物', action: 'hagrid_creature', icon: '🥚' },
+      { text: '詢問禁忌森林的秘密', action: 'hagrid_forest', icon: '🌲' },
+      { text: '前往渾拚柳', scene: 'whomping_willow', icon: '🌳' },
+      { text: '返回大禮堂', scene: 'great_hall', icon: '↩️' },
+    ]
+  },
+  whomping_willow: {
+    location: '渾拚柳',
+    art: 'courtyard',
+    narrative: `校園邊緣，一棵巨大的<span class="highlight">渾拚柳</span>不安地揮舞著粗壯的枝幹。任何靠近的東西都會被猛烈地拍飛。樹根下似乎有一條通往某處的隧道。你記起<span class="highlight">劫盜地圖</span>上標記過這裡有一條通往<span class="highlight">乞丐咆哮屋</span>的密道。一隻<span class="highlight">玻璃獸</span>在附近的草地上跳躍，嘴裡叼著閃亮的東西。`,
+    choices: [
+      { text: '想辦法按住樹根進入密道（智力檢定）', action: 'willow_tunnel', icon: '🕳️' },
+      { text: '追逐玻璃獸', action: 'catch_niffler', icon: '✨' },
+      { text: '返回海格的小屋', scene: 'hagrid', icon: '↩️' },
     ]
   },
 };
@@ -1938,8 +1964,8 @@ function getSceneArt(sceneId) {
 function handleAction(action) {
   const actions = {
     take_vial: () => {
-      addItem('potion_mana', '魔力藥水', '💜', 1);
-      showToast('✨ 發現了魔力藥水！');
+      addItem('potion_mana', '魔力恢復劑', '💜', 1);
+      showToast('✨ 發現了魔力恢復劑！');
       addXP(15);
       logMessage('你小心翼翼地將發光藥瓶收入口袋。');
     },
@@ -1947,7 +1973,7 @@ function handleAction(action) {
       if (GameState.int >= 7) {
         if (!GameState.spells.includes('accio')) {
           GameState.spells.push('accio');
-          showToast('✨ 學會了新咒語：速速前！');
+          showToast('✨ 學會了新咒語：速速前（Accio）！');
           addXP(30);
         } else {
           showToast('你已經學會了這個咒語。');
@@ -1960,7 +1986,7 @@ function handleAction(action) {
     study_defense: () => {
       if (!GameState.spells.includes('protego')) {
         GameState.spells.push('protego');
-        showToast('✨ 學會了破心護！');
+        showToast('✨ 學會了破心護（Protego）！');
         addXP(25);
       } else {
         GameState.def += 1;
@@ -1978,14 +2004,14 @@ function handleAction(action) {
     brew_careful: () => {
       if (GameState.int >= 8) {
         addItem('felix', '福來福去', '🌟', 1);
-        showToast('✨ 成功調製了福來福去！液態幸運！');
+        showToast('✨ 成功調製了福來福去！石內卜教授罕見地點了點頭。');
         addXP(40);
         updateQuest('q2', 100);
       } else {
         GameState.hp = Math.max(10, GameState.hp - 20);
-        showToast('💥 坩堝爆炸了！血量 -20');
+        showToast('💥 坩堝爆炸了！石內卜冷笑：「顯然天賦不夠。」血量 -20');
       }
-      logMessage('你嘗試調製福來福去⋯');
+      logMessage('你嘗試在石內卜的課堂上調製福來福去⋯');
     },
     brew_improv: () => {
       if (Math.random() > 0.5) {
@@ -2025,13 +2051,13 @@ function handleAction(action) {
         showToast('符文揭示了古老的秘密！智力 +1');
         addXP(20);
       } else {
-        showToast('你需要螢光閃爍才能閱讀符文。');
+        showToast('你需要路摸思（Lumos）才能閱讀符文。');
       }
     },
     open_tome: () => {
       if (!GameState.spells.includes('stupefy')) {
         GameState.spells.push('stupefy');
-        showToast('✨ 從古老典籍中學會了乒乓去！');
+        showToast('✨ 從古老典籍中學會了咄咄失（Stupefy）！');
         addXP(35);
       } else {
         GameState.int += 1;
@@ -2054,13 +2080,13 @@ function handleAction(action) {
       castSpellEffect();
       if (GameState.str >= 7) {
         GameState.gold += 20;
-        showToast('⚔️ 你贏得了決鬥！金幣 +20');
+        showToast('⚔️ 去去武器走！馬份的魔杖飛了出去！金幣 +20');
         addXP(35);
       } else {
         GameState.hp = Math.max(10, GameState.hp - 20);
-        showToast('你的攻擊被擋下了！血量 -20');
+        showToast('你的攻擊被馬份擋下了！血量 -20');
       }
-      logMessage('咒語在競技場上飛舞！');
+      logMessage('咒語在決鬥場上飛舞！');
     },
     duel_defend: () => {
       castSpellEffect();
@@ -2077,11 +2103,11 @@ function handleAction(action) {
       castSpellEffect();
       if (GameState.int >= 8 && GameState.spells.includes('stupefy')) {
         GameState.gold += 30;
-        showToast('⚡ 乒乓去命中！大獲全勝！金幣 +30');
+        showToast('⚡ 咄咄失命中！馬份倒地不起！金幣 +30');
         addXP(45);
       } else {
         GameState.hp = Math.max(10, GameState.hp - 15);
-        showToast('你的咒語失效了！血量 -15');
+        showToast('你的咒語失效了！馬份嘲笑著反擊！血量 -15');
       }
     },
     learn_patronus: () => {
@@ -2089,10 +2115,10 @@ function handleAction(action) {
         if (!GameState.spells.includes('patronus')) {
           GameState.spells.push('patronus');
           castSpellEffect();
-          showToast('🦌 你學會了護法咒語！');
+          showToast('🦌 你學會了乘乘護法！');
           addXP(60);
         } else {
-          showToast('你已經學會了護法咒語。');
+          showToast('你已經學會了乘乘護法。');
         }
       } else {
         showToast('你缺乏內在的力量⋯（需要魅力 8）');
@@ -2100,7 +2126,7 @@ function handleAction(action) {
     },
     ask_identity: () => {
       if (GameState.cha >= 9) {
-        showToast('他揭露了自己是傳奇巫師的身分！');
+        showToast('路平教授微笑道：「我曾是你父母的朋友⋯代號月影。」');
         addXP(20);
         GameState.cha += 1;
       } else {
@@ -2108,13 +2134,13 @@ function handleAction(action) {
       }
     },
     take_artifact: () => {
-      addItem('amulet', '魔法護符', '🔮', 1);
+      addItem('amulet', '光榮之手', '🔮', 1);
       GameState.def += 2;
-      showToast('🔮 獲得了魔法護符！防禦 +2');
+      showToast('🔮 獲得了光榮之手！防禦 +2');
       addXP(40);
     },
     mirror_gaze: () => {
-      showToast('魔鏡展現了你成為偉大巫師的未來⋯');
+      showToast('意若思鏡展現了你成為偉大巫師的未來⋯');
       addXP(15);
       GameState.cha += 1;
     },
@@ -2143,11 +2169,11 @@ function handleAction(action) {
     signal_forest: () => {
       if (GameState.spells.includes('patronus')) {
         castSpellEffect();
-        showToast('🦌 你的護法照亮了整片森林！');
+        showToast('🦌 你的護法照亮了禁忌森林！人馬翡冷翠回應了你！');
         addXP(30);
         addItem('feather', '鳳凰羽毛', '🪶', 1);
       } else {
-        showToast('你的信號消失在黑暗之中⋯');
+        showToast('你的信號消失在禁忌森林的黑暗之中⋯');
       }
     },
     rest: () => {
@@ -2155,6 +2181,57 @@ function handleAction(action) {
       GameState.mana = Math.min(GameState.maxMana, GameState.mana + 30);
       showToast('🌙 你在寧靜中休息。血量 +20，魔力 +30');
       logMessage('寧靜的夜空恢復了你的能量。');
+    },
+    hagrid_creature: () => {
+      const roll = Math.random();
+      if (roll > 0.5) {
+        addItem('egg', '挪威脊背龍蛋', '🥚', 1);
+        showToast('🥚 海格悄悄地說：「噓⋯幫我保管這顆龍蛋。」');
+        addXP(35);
+      } else {
+        addItem('niffler', '玻璃獸', '🐾', 1);
+        showToast('🐾 一隻玻璃獸跳到你懷裡！');
+        addXP(25);
+      }
+      updateQuest('q3', 50);
+      logMessage('你查看了海格小屋裡的神秘生物。');
+    },
+    hagrid_forest: () => {
+      if (GameState.cha >= 7) {
+        showToast('海格壓低聲音：「森林裡有獨角獸⋯最近牠們受到了攻擊。」');
+        GameState.int += 1;
+        addXP(20);
+        updateQuest('q3', 100);
+      } else {
+        showToast('海格搖搖頭：「這事兒不能告訴每個人⋯」（需要魅力 7）');
+      }
+      logMessage('你向海格詢問禁忌森林的情況。');
+    },
+    willow_tunnel: () => {
+      if (GameState.int >= 8) {
+        addItem('map', '劫盜地圖', '🗺️', 1);
+        showToast('🗺️ 在密道中發現了劫盜地圖！「我鄭重宣誓我沒有乾好事。」');
+        addXP(40);
+        logMessage('你成功進入渾拚柳下的密道。');
+      } else {
+        GameState.hp = Math.max(10, GameState.hp - 20);
+        showToast('🌳 渾拚柳把你拍飛了！血量 -20');
+        logMessage('渾拚柳的枝幹重重地擊中了你。');
+      }
+    },
+    catch_niffler: () => {
+      if (GameState.spells.includes('accio')) {
+        castSpellEffect();
+        GameState.gold += 40;
+        addItem('snitch', '金探子', '⚡', 1);
+        showToast('✨ 速速前！你抓住了玻璃獸和牠偷的金探子！金幣 +40');
+        addXP(30);
+      } else {
+        GameState.gold += 15;
+        showToast('🐾 你追了半天只追回幾枚金幣⋯金幣 +15');
+        addXP(10);
+      }
+      logMessage('你追逐那隻調皮的玻璃獸。');
     },
   };
   if (actions[action]) {
