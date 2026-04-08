@@ -1775,7 +1775,7 @@ let stars = [];
 // ============ NPC DATABASE ============
 const NPCS = {
   dumbledore: { name: '鄧不利多', title: '霍格華茲校長', avatar: '🧙‍♂️' },
-  mcgonagall: { name: '麥米奈娃', title: '變形學教授 / 副校長', avatar: '🐱' },
+  mcgonagall: { name: '麥教授', title: '變形學教授 / 副校長', avatar: '🐱' },
   snape: { name: '石內卜', title: '魔藥學教授', avatar: '🖤' },
   hagrid: { name: '海格', title: '獵場看守人', avatar: '🧔' },
   lupin: { name: '路平', title: '黑魔法防禦術教授', avatar: '🐺' },
@@ -1785,7 +1785,7 @@ const NPCS = {
   draco: { name: '馬份', title: '史萊哲林學生', avatar: '🐍' },
   luna: { name: '露娜', title: '雷文克勞學生', avatar: '🌙' },
   dobby: { name: '多比', title: '自由的家庭小精靈', avatar: '🧦' },
-  filch: { name: '乾七', title: '管理員', avatar: '🐈' },
+  filch: { name: '飛七', title: '管理員', avatar: '🐈' },
 };
 
 // ============ RELATIONSHIP SYSTEM ============
@@ -1872,7 +1872,7 @@ const DIALOGUES = {
   },
   dumbledore_hint: {
     npc: 'dumbledore',
-    text: '鄧不利多的表情變得嚴肅了一瞬，隨即恢復和藹的微笑。<br><br>「霍格華茲一直都是安全的⋯但黑暗的力量從未真正消失。你若在禁忌森林或地下城中發現了什麼不尋常的事，記得來找我。」<br><br>他從口袋裡取出一顆<span class="highlight">檸檬雪寶</span>遞給你。',
+    text: '鄧不利多的表情變得嚴肅了一瞬，隨即恢復和藹的微笑。<br><br>「霍格華茲一直都是安全的⋯但黑暗的力量從未真正消失。你若在禁忌森林或地窖中發現了什麼不尋常的事，記得來找我。」<br><br>他從口袋裡取出一顆<span class="highlight">檸檬雪寶</span>遞給你。',
     choices: [
       { text: '收下檸檬雪寶並告退', action: () => { addItem('candy', '檸檬雪寶', '🍬', 1); addXP(15); StoryState.mainQuestStep = 1; showToast('📜 主線任務更新：調查黑暗力量的線索'); }, next: null },
     ]
@@ -1888,10 +1888,10 @@ const DIALOGUES = {
   },
   hermione_help: {
     npc: 'hermione',
-    text: '妙麗壓低聲音，表情嚴肅起來。<br><br>「我也注意到了⋯圖書館禁書區裡少了幾本關於<span class="highlight">分靈體</span>的書。而且——」她左右張望，「我在地下城的牆上發現了奇怪的蛇形標記。你覺得會不會跟<em>那個人</em>有關？」',
+    text: '妙麗壓低聲音，表情嚴肅起來。<br><br>「我也注意到了⋯圖書館禁書區裡少了幾本關於<span class="highlight">分靈體</span>的書。而且——」她左右張望，「我在地窖的牆上發現了奇怪的蛇形標記。你覺得會不會跟<em>那個人</em>有關？」',
     choices: [
       { text: '「分靈體？那是什麼？」', action: () => { StoryState.mainQuestStep = 2; addXP(20); showToast('📜 主線任務更新：調查分靈體的秘密'); }, next: 'hermione_horcrux' },
-      { text: '「我去地下城看看那些標記。」', action: () => { StoryState.mainQuestStep = 2; GameState.flags.snakeMarks = true; addXP(15); }, next: null },
+      { text: '「我去地窖看看那些標記。」', action: () => { StoryState.mainQuestStep = 2; GameState.flags.snakeMarks = true; addXP(15); }, next: null },
     ]
   },
   hermione_horcrux: {
@@ -1911,7 +1911,7 @@ const DIALOGUES = {
   },
   snape_confront: {
     npc: 'snape',
-    text: '石內卜教授從陰影中現身，黑色長袍在身後翻飛。冰冷的目光審視著你。<br><br>「在地下城閒逛？」他的聲音像絲綢一樣滑順而危險。「十分⋯從你的學院扣掉。」<br><br>他頓了頓，似乎在考慮什麼。「除非⋯你能告訴我，你在這裡找什麼？」',
+    text: '石內卜教授從陰影中現身，黑色長袍在身後翻飛。冰冷的目光審視著你。<br><br>「在地窖閒逛？」他的聲音像絲綢一樣滑順而危險。「十分⋯從你的學院扣掉。」<br><br>他頓了頓，似乎在考慮什麼。「除非⋯你能告訴我，你在這裡找什麼？」',
     choices: [
       { text: '「我在調查牆上的蛇形標記。」（誠實）', req: () => GameState.flags.snakeMarks, action: () => { changeRelation('snape', 2); StoryState.trustedSnape = true; }, next: 'snape_trust' },
       { text: '「只是路過⋯對不起，教授。」', action: () => { changeRelation('snape', -1); }, next: 'snape_dismiss' },
@@ -1973,7 +1973,7 @@ const DIALOGUES = {
   },
   dobby_info: {
     npc: 'dobby',
-    text: '多比擤了擤鼻子，用袖子擦掉眼淚。<br><br>「多比聽到⋯有人在深夜對著一本舊書說話。那本書⋯會回話！多比很害怕⋯」<br><br>他壓低聲音：「是在地下城最深處⋯那個連乾七先生都不敢去的地方。」',
+    text: '多比擤了擤鼻子，用袖子擦掉眼淚。<br><br>「多比聽到⋯有人在深夜對著一本舊書說話。那本書⋯會回話！多比很害怕⋯」<br><br>他壓低聲音：「是在地窖最深處⋯那個連飛七先生都不敢去的地方。」',
     choices: [
       { text: '「謝謝你，多比。我會去查的。」', action: () => { StoryState.mainQuestStep = Math.max(StoryState.mainQuestStep, 2); addXP(15); GameState.flags.dobbyTip = true; }, next: null },
     ]
@@ -2198,10 +2198,10 @@ const SCENES = {
   great_hall: {
     location: '大禮堂',
     art: 'great_hall',
-    narrative: `<span class="highlight">大禮堂</span>的魔法天花板閃爍著千盞浮空蠟燭，映照著頭頂的星空。<span class="highlight">鄧不利多</span>校長坐在教職員長桌的正中央，銀色長鬚在燭光中微微閃動。<span class="highlight">麥米奈娃</span>教授嚴肅地巡視著學院餐桌。差點沒頭的乃乃從你身旁飄過，友善地向你點頭致意。你在霍格華茲的旅程，從這裡開始。`,
+    narrative: `<span class="highlight">大禮堂</span>的魔法天花板閃爍著千盞浮空蠟燭，映照著頭頂的星空。<span class="highlight">鄧不利多</span>校長坐在教職員長桌的正中央，銀色長鬚在燭光中微微閃動。<span class="highlight">麥教授</span>教授嚴肅地巡視著學院餐桌。差點沒頭的乃乃從你身旁飄過，友善地向你點頭致意。你在霍格華茲的旅程，從這裡開始。`,
     choices: [
       { text: '與鄧不利多校長交談', action: 'talk_dumbledore', icon: '🧙‍♂️' },
-      { text: '探索地下城', scene: 'dungeons', icon: '🕯️' },
+      { text: '探索地窖', scene: 'dungeons', icon: '🕯️' },
       { text: '前往圖書館', scene: 'library', icon: '📚' },
       { text: '走向中庭', scene: 'courtyard', icon: '🏰' },
       { text: '攀登大階梯', scene: 'staircase', icon: '🪜' },
@@ -2209,9 +2209,9 @@ const SCENES = {
     ]
   },
   dungeons: {
-    location: '地下城',
+    location: '地窖',
     art: 'dungeons',
-    narrative: `冰冷的石牆上滲出水珠，你走進了<span class="highlight">地下城</span>。走廊上的火把忽明忽暗，投射出舞動的陰影。<span class="highlight">石內卜</span>教授的魔藥學教室門半開著——裡面的坩堝冒著神秘的泡泡。架子上一瓶<span class="highlight">白鮮液</span>旁邊，有個發光的藥瓶引起了你的注意⋯`,
+    narrative: `冰冷的石牆上滲出水珠，你走進了<span class="highlight">地窖</span>。走廊上的火把忽明忽暗，投射出舞動的陰影。<span class="highlight">石內卜</span>教授的魔藥學教室門半開著——裡面的坩堝冒著神秘的泡泡。架子上一瓶<span class="highlight">白鮮液</span>旁邊，有個發光的藥瓶引起了你的注意⋯`,
     choices: [
       { text: '與石內卜教授對話', action: 'talk_snape', icon: '🖤' },
       { text: '拿起發光的藥瓶', action: 'take_vial', icon: '🧪' },
@@ -2247,7 +2247,7 @@ const SCENES = {
   staircase: {
     location: '大階梯',
     art: 'staircase',
-    narrative: `<span class="highlight">大階梯</span>無盡地向上延伸，被施了魔法的階梯不斷移動和重新排列，發出深沉的隆隆聲。肖像畫中的人物在你經過時竊竊私語——你認出了<span class="highlight">胖夫人</span>守護著葛萊分多的入口。一道階梯突然轉向——通往一條你從未見過的走廊。走廊盡頭，管理員<span class="highlight">乾七</span>的貓「乃乃夫人」正虎視眈眈地盯著你。`,
+    narrative: `<span class="highlight">大階梯</span>無盡地向上延伸，被施了魔法的階梯不斷移動和重新排列，發出深沉的隆隆聲。肖像畫中的人物在你經過時竊竊私語——你認出了<span class="highlight">胖夫人</span>守護著葛萊分多的入口。一道階梯突然轉向——通往一條你從未見過的走廊。走廊盡頭，管理員<span class="highlight">飛七</span>的貓「拿樂絲太太」正虎視眈眈地盯著你。`,
     choices: [
       { text: '回答謎語', action: 'riddle', icon: '🤔' },
       { text: '一隻小精靈向你跑來⋯', action: 'talk_dobby', icon: '🧦' },
@@ -2867,7 +2867,7 @@ function updateUI() {
     const stepDescriptions = [
       '與校內人物對話，揭開籠罩霍格華茲的黑暗陰謀。',
       '鄧不利多暗示了黑暗的存在。去找線索吧。',
-      '調查地下城的蛇形標記，或詢問石內卜教授。',
+      '調查地窖的蛇形標記，或詢問石內卜教授。',
       '你已經找到盟友。前往多比指引的密室。',
       '你發現了分靈體！前往大禮堂前往最終章。',
       '你的選擇決定了霍格華茲的命運⋯',
