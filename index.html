@@ -1188,6 +1188,35 @@ html, body {
 .rel-name { color: var(--parchment-dark); flex: 1; }
 .rel-hearts { color: #c83030; font-size: 10px; letter-spacing: 2px; }
 
+/* ============ SAVE BUTTON ============ */
+.save-btn {
+  background: rgba(212,168,67,0.08);
+  border: 1px solid rgba(212,168,67,0.3);
+  color: var(--gold);
+  font-size: 16px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+.save-btn:hover {
+  background: rgba(212,168,67,0.2);
+  border-color: var(--gold);
+  box-shadow: 0 0 12px rgba(212,168,67,0.2);
+}
+
+#continueBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+#continueBtn:disabled:hover {
+  background: transparent;
+  border-color: rgba(212,168,67,0.3);
+  color: var(--gold-dark);
+  box-shadow: none;
+  transform: none;
+}
+
 /* ============ MUSIC TOGGLE ============ */
 .music-toggle {
   position: fixed;
@@ -1304,7 +1333,7 @@ html, body {
       <button class="btn-magic" onclick="showScreen('character-screen')">
         ✦ 開始你的旅程 ✦
       </button>
-      <button class="btn-magic btn-secondary" onclick="showScreen('character-screen')">
+      <button class="btn-magic btn-secondary" id="continueBtn" onclick="loadGame()">
         繼續冒險
       </button>
     </div>
@@ -1442,6 +1471,7 @@ html, body {
           <span class="resource-val" id="goldVal">50</span>
           <span class="resource-label">金幣</span>
         </div>
+        <button class="save-btn" onclick="saveGame()" title="儲存遊戲">💾</button>
         <div class="mobile-toggles">
           <button class="mobile-toggle-btn" onclick="togglePanel('right')">🎒</button>
         </div>
@@ -3140,6 +3170,20 @@ function loadScene(sceneId) {
     choicesEl.appendChild(btn);
   });
   updateUI();
+  // Auto-save on scene change (silent, no toast)
+  if (typeof Storage !== 'undefined') {
+    try {
+      const saveData = {
+        version: 1,
+        timestamp: Date.now(),
+        gameState: GameState,
+        storyState: StoryState,
+        relationships: Relationships,
+        selectedHouse: selectedHouse,
+      };
+      localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
+    } catch (e) {}
+  }
 }
 
 // ============ UPDATE UI ============
@@ -3228,6 +3272,103 @@ function updateUI() {
   }
 }
 
+// ============ SAVE / LOAD SYSTEM ============
+const SAVE_KEY = '7pmw_save_v1';
+
+function saveGame() {
+  try {
+    const saveData = {
+      version: 1,
+      timestamp: Date.now(),
+      gameState: GameState,
+      storyState: StoryState,
+      relationships: Relationships,
+      selectedHouse: selectedHouse,
+    };
+    localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
+    showToast('💾 遊戲已儲存');
+    logMessage('進度已儲存。');
+  } catch (e) {
+    showToast('❌ 儲存失敗：' + e.message);
+  }
+}
+
+function hasSaveGame() {
+  try {
+    return localStorage.getItem(SAVE_KEY) !== null;
+  } catch (e) {
+    return false;
+  }
+}
+
+function loadGame() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) {
+      showToast('沒有找到存檔，請開始新遊戲');
+      showScreen('character-screen');
+      return;
+    }
+    const saveData = JSON.parse(raw);
+
+    // Restore state
+    Object.assign(GameState, saveData.gameState);
+    Object.assign(StoryState, saveData.storyState);
+    Object.assign(Relationships, saveData.relationships);
+    selectedHouse = saveData.selectedHouse;
+
+    // Restore UI
+    const hd = HOUSE_DATA[GameState.house];
+    document.getElementById('playerName').textContent = GameState.name;
+    document.getElementById('playerHouse').textContent = hd.name;
+    document.getElementById('playerAvatar').textContent = hd.emoji;
+    document.getElementById('playerAvatar').style.borderColor = hd.color;
+
+    showScreen('game-screen');
+    loadScene(GameState.currentScene || 'great_hall');
+
+    const date = new Date(saveData.timestamp);
+    const timeStr = `${date.getMonth()+1}/${date.getDate()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+    showToast(`📖 載入存檔（${timeStr}）`);
+    logMessage(`歡迎回來，${hd.name}的${GameState.name}！`);
+  } catch (e) {
+    showToast('❌ 讀取失敗：' + e.message);
+    showScreen('character-screen');
+  }
+}
+
+function deleteSave() {
+  try {
+    localStorage.removeItem(SAVE_KEY);
+    updateContinueButton();
+  } catch (e) {}
+}
+
+function updateContinueButton() {
+  const btn = document.getElementById('continueBtn');
+  if (!btn) return;
+  if (hasSaveGame()) {
+    btn.disabled = false;
+    try {
+      const saveData = JSON.parse(localStorage.getItem(SAVE_KEY));
+      const date = new Date(saveData.timestamp);
+      const timeStr = `${date.getMonth()+1}/${date.getDate()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+      const hd = HOUSE_DATA[saveData.gameState.house];
+      btn.innerHTML = `繼續冒險（Lv.${saveData.gameState.level} ${hd.emoji} · ${timeStr}）`;
+    } catch (e) {
+      btn.innerHTML = '繼續冒險';
+    }
+  } else {
+    btn.disabled = true;
+    btn.innerHTML = '繼續冒險（無存檔）';
+  }
+}
+
+// Initialize continue button on load
+window.addEventListener('DOMContentLoaded', updateContinueButton);
+// Also call immediately in case DOMContentLoaded already fired
+setTimeout(updateContinueButton, 100);
+
 // ============ START GAME ============
 function startGame() {
   if (!selectedHouse) {
@@ -3246,6 +3387,8 @@ function startGame() {
   logMessage(`歡迎來到魔法世界，${hd.name}的${name}！`);
   // Show opening chapter banner
   setTimeout(() => showChapter(0), 500);
+  // Auto-save on start
+  setTimeout(saveGame, 1000);
 }
 
 function togglePanel(side) {
