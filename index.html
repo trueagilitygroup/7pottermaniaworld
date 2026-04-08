@@ -1130,10 +1130,17 @@ html, body {
   border-bottom: 1px solid rgba(212,168,67,0.15);
 }
 .dialogue-avatar {
-  width: 44px; height: 44px; border-radius: 50%;
+  width: 72px; height: 72px; border-radius: 50%;
   border: 2px solid var(--gold-dark);
   display: flex; align-items: center; justify-content: center;
   font-size: 22px; background: rgba(255,255,255,0.04); flex-shrink: 0;
+  overflow: hidden;
+  box-shadow: 0 0 20px rgba(212,168,67,0.15);
+}
+.dialogue-avatar svg {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 .dialogue-name { font-family: 'Noto Serif TC', serif; font-weight: 700; font-size: 15px; color: var(--gold); }
 .dialogue-title { font-size: 11px; color: var(--parchment-dark); }
@@ -1773,6 +1780,320 @@ const ctx = canvas.getContext('2d');
 let stars = [];
 
 // ============ NPC DATABASE ============
+// SVG portrait generator — each NPC has unique features
+function npcPortrait(id) {
+  const portraits = {
+    dumbledore: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <defs><radialGradient id="dmbBg" cx="50%" cy="40%"><stop offset="0%" stop-color="#3a2a5a"/><stop offset="100%" stop-color="#1a1030"/></radialGradient></defs>
+      <rect width="100" height="100" fill="url(#dmbBg)"/>
+      <!-- Wizard hat -->
+      <path d="M30,38 L70,38 L62,8 Q50,2 38,8 Z" fill="#1a1a3a" stroke="#d4a843" stroke-width="0.8"/>
+      <circle cx="50" cy="10" r="2" fill="#f0d078"/>
+      <!-- Hat brim -->
+      <ellipse cx="50" cy="40" rx="28" ry="3" fill="#0a0a1a"/>
+      <!-- Face -->
+      <ellipse cx="50" cy="55" rx="18" ry="20" fill="#e8c8a0"/>
+      <!-- Long beard -->
+      <path d="M35,62 Q40,90 50,95 Q60,90 65,62 Q60,68 50,68 Q40,68 35,62" fill="#e8e8e8"/>
+      <path d="M38,65 Q40,85 50,92 Q60,85 62,65" fill="#f5f5f5"/>
+      <!-- Mustache -->
+      <path d="M40,58 Q45,62 50,60 Q55,62 60,58 L58,56 Q50,58 42,56 Z" fill="#e8e8e8"/>
+      <!-- Half-moon glasses -->
+      <path d="M38,52 Q42,56 46,52" fill="none" stroke="#d4a843" stroke-width="1.2"/>
+      <path d="M54,52 Q58,56 62,52" fill="none" stroke="#d4a843" stroke-width="1.2"/>
+      <line x1="46" y1="52" x2="54" y2="52" stroke="#d4a843" stroke-width="0.8"/>
+      <!-- Eyes (twinkling) -->
+      <circle cx="42" cy="52" r="0.8" fill="#3a7bdc"/>
+      <circle cx="58" cy="52" r="0.8" fill="#3a7bdc"/>
+      <!-- Long hair -->
+      <path d="M32,50 Q26,68 30,82 L34,82 Q32,68 36,55 Z" fill="#e8e8e8"/>
+      <path d="M68,50 Q74,68 70,82 L66,82 Q68,68 64,55 Z" fill="#e8e8e8"/>
+    </svg>`,
+    mcgonagall: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <defs><radialGradient id="mcgBg" cx="50%" cy="40%"><stop offset="0%" stop-color="#2a1a3a"/><stop offset="100%" stop-color="#0a0a1a"/></radialGradient></defs>
+      <rect width="100" height="100" fill="url(#mcgBg)"/>
+      <!-- Pointed witch hat -->
+      <path d="M28,40 L72,40 L58,5 Q50,2 42,5 Z" fill="#0a0a1a" stroke="#2a623d" stroke-width="0.8"/>
+      <ellipse cx="50" cy="42" rx="30" ry="3" fill="#0a0a1a"/>
+      <!-- Face -->
+      <ellipse cx="50" cy="58" rx="16" ry="19" fill="#e8d4b8"/>
+      <!-- Hair pulled back, gray -->
+      <path d="M34,52 Q30,75 38,90 L40,88 Q36,72 38,55 Z" fill="#888888"/>
+      <path d="M66,52 Q70,75 62,90 L60,88 Q64,72 62,55 Z" fill="#888888"/>
+      <!-- Square glasses -->
+      <rect x="38" y="52" width="9" height="7" fill="none" stroke="#1a1a1a" stroke-width="1"/>
+      <rect x="53" y="52" width="9" height="7" fill="none" stroke="#1a1a1a" stroke-width="1"/>
+      <line x1="47" y1="55" x2="53" y2="55" stroke="#1a1a1a" stroke-width="0.8"/>
+      <!-- Eyes -->
+      <circle cx="42.5" cy="55.5" r="0.8" fill="#1a1a1a"/>
+      <circle cx="57.5" cy="55.5" r="0.8" fill="#1a1a1a"/>
+      <!-- Stern mouth -->
+      <line x1="44" y1="68" x2="56" y2="68" stroke="#8b1a1a" stroke-width="1"/>
+      <!-- Tartan collar -->
+      <path d="M32,78 L68,78 L72,95 L28,95 Z" fill="#2a623d"/>
+      <line x1="35" y1="80" x2="35" y2="95" stroke="#c83030" stroke-width="0.5"/>
+      <line x1="50" y1="80" x2="50" y2="95" stroke="#c83030" stroke-width="0.5"/>
+      <line x1="65" y1="80" x2="65" y2="95" stroke="#c83030" stroke-width="0.5"/>
+    </svg>`,
+    snape: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <defs><radialGradient id="snpBg" cx="50%" cy="40%"><stop offset="0%" stop-color="#1a0a1a"/><stop offset="100%" stop-color="#050008"/></radialGradient></defs>
+      <rect width="100" height="100" fill="url(#snpBg)"/>
+      <!-- Long black hair -->
+      <path d="M28,35 Q22,55 25,80 L30,80 Q28,60 32,40" fill="#0a0a0a"/>
+      <path d="M72,35 Q78,55 75,80 L70,80 Q72,60 68,40" fill="#0a0a0a"/>
+      <path d="M30,30 Q50,18 70,30 L68,45 Q50,38 32,45 Z" fill="#0a0a0a"/>
+      <!-- Face (pale) -->
+      <ellipse cx="50" cy="55" rx="17" ry="20" fill="#d4d0c8"/>
+      <!-- Hair falling on face -->
+      <path d="M33,40 Q38,52 35,62" fill="#0a0a0a"/>
+      <path d="M67,40 Q62,52 65,62" fill="#0a0a0a"/>
+      <!-- Hooked nose -->
+      <path d="M50,52 L48,62 L52,64 Z" fill="#b8b0a8"/>
+      <!-- Dark intense eyes -->
+      <ellipse cx="43" cy="52" rx="2" ry="1.2" fill="#0a0a0a"/>
+      <ellipse cx="57" cy="52" rx="2" ry="1.2" fill="#0a0a0a"/>
+      <!-- Frown -->
+      <path d="M44,68 Q50,66 56,68" fill="none" stroke="#3a1a1a" stroke-width="1" stroke-linecap="round"/>
+      <!-- Black robe collar -->
+      <path d="M28,78 Q50,82 72,78 L72,95 L28,95 Z" fill="#0a0a0a"/>
+      <line x1="50" y1="78" x2="50" y2="95" stroke="#1a1a1a" stroke-width="0.5"/>
+    </svg>`,
+    hagrid: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <defs><radialGradient id="hgrBg" cx="50%" cy="40%"><stop offset="0%" stop-color="#3a2a1a"/><stop offset="100%" stop-color="#1a0a05"/></radialGradient></defs>
+      <rect width="100" height="100" fill="url(#hgrBg)"/>
+      <!-- Massive wild hair -->
+      <ellipse cx="50" cy="35" rx="32" ry="22" fill="#3a2010"/>
+      <ellipse cx="35" cy="42" rx="8" ry="12" fill="#3a2010"/>
+      <ellipse cx="65" cy="42" rx="8" ry="12" fill="#3a2010"/>
+      <!-- Face (large, ruddy) -->
+      <ellipse cx="50" cy="58" rx="20" ry="20" fill="#d8a888"/>
+      <!-- Massive bushy beard -->
+      <path d="M28,62 Q22,90 50,95 Q78,90 72,62 Q60,72 50,72 Q40,72 28,62" fill="#3a2010"/>
+      <path d="M32,68 Q30,88 50,92 Q70,88 68,68 Q58,75 50,75 Q42,75 32,68" fill="#4a2818"/>
+      <!-- Mustache (huge) -->
+      <ellipse cx="50" cy="63" rx="14" ry="4" fill="#3a2010"/>
+      <!-- Kind eyes -->
+      <circle cx="43" cy="55" r="1.5" fill="#1a1a3a"/>
+      <circle cx="57" cy="55" r="1.5" fill="#1a1a3a"/>
+      <circle cx="43.3" cy="54.7" r="0.4" fill="#fff"/>
+      <circle cx="57.3" cy="54.7" r="0.4" fill="#fff"/>
+      <!-- Bushy eyebrows -->
+      <path d="M38,50 Q43,48 48,50" stroke="#3a2010" stroke-width="2" fill="none"/>
+      <path d="M52,50 Q57,48 62,50" stroke="#3a2010" stroke-width="2" fill="none"/>
+      <!-- Big nose -->
+      <ellipse cx="50" cy="58" rx="3" ry="2" fill="#c89878"/>
+    </svg>`,
+    lupin: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <defs><radialGradient id="lpnBg" cx="50%" cy="40%"><stop offset="0%" stop-color="#2a2a1a"/><stop offset="100%" stop-color="#0a0a0a"/></radialGradient></defs>
+      <rect width="100" height="100" fill="url(#lpnBg)"/>
+      <!-- Tousled brown hair with gray streaks -->
+      <path d="M30,30 Q50,15 70,30 Q72,42 68,48 Q60,38 50,40 Q40,38 32,48 Q28,42 30,30" fill="#5a4030"/>
+      <path d="M35,28 Q40,22 45,28" fill="#888888" opacity="0.6"/>
+      <path d="M55,28 Q60,22 65,28" fill="#888888" opacity="0.6"/>
+      <!-- Face (tired but kind) -->
+      <ellipse cx="50" cy="55" rx="17" ry="19" fill="#d8c0a0"/>
+      <!-- Scars -->
+      <line x1="38" y1="48" x2="44" y2="58" stroke="#a06050" stroke-width="0.8"/>
+      <line x1="58" y1="62" x2="64" y2="68" stroke="#a06050" stroke-width="0.8"/>
+      <!-- Tired eyes -->
+      <ellipse cx="43" cy="54" rx="1.8" ry="1.2" fill="#3a2810"/>
+      <ellipse cx="57" cy="54" rx="1.8" ry="1.2" fill="#3a2810"/>
+      <!-- Eye bags -->
+      <path d="M40,57 Q43,58 46,57" fill="none" stroke="#a89080" stroke-width="0.5"/>
+      <path d="M54,57 Q57,58 60,57" fill="none" stroke="#a89080" stroke-width="0.5"/>
+      <!-- Slight smile -->
+      <path d="M44,68 Q50,71 56,68" fill="none" stroke="#5a3a2a" stroke-width="1" stroke-linecap="round"/>
+      <!-- Patched robe -->
+      <path d="M28,78 L72,78 L72,95 L28,95 Z" fill="#5a4a3a"/>
+      <rect x="35" y="83" width="6" height="6" fill="#3a2a1a" stroke="#1a1a1a" stroke-width="0.3"/>
+      <rect x="58" y="86" width="5" height="5" fill="#3a2a1a" stroke="#1a1a1a" stroke-width="0.3"/>
+    </svg>`,
+    hermione: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <defs><radialGradient id="hrmBg" cx="50%" cy="40%"><stop offset="0%" stop-color="#3a1a1a"/><stop offset="100%" stop-color="#1a0a0a"/></radialGradient></defs>
+      <rect width="100" height="100" fill="url(#hrmBg)"/>
+      <!-- Bushy brown hair -->
+      <path d="M22,40 Q15,60 22,82 Q28,72 30,55" fill="#5a3018"/>
+      <path d="M78,40 Q85,60 78,82 Q72,72 70,55" fill="#5a3018"/>
+      <ellipse cx="50" cy="32" rx="28" ry="18" fill="#5a3018"/>
+      <ellipse cx="35" cy="50" rx="10" ry="15" fill="#6a3820"/>
+      <ellipse cx="65" cy="50" rx="10" ry="15" fill="#6a3820"/>
+      <!-- Face -->
+      <ellipse cx="50" cy="55" rx="16" ry="18" fill="#f0d8b8"/>
+      <!-- Bright determined eyes -->
+      <ellipse cx="43" cy="53" rx="1.8" ry="1.5" fill="#6a3a18"/>
+      <ellipse cx="57" cy="53" rx="1.8" ry="1.5" fill="#6a3a18"/>
+      <circle cx="43.3" cy="52.7" r="0.4" fill="#fff"/>
+      <circle cx="57.3" cy="52.7" r="0.4" fill="#fff"/>
+      <!-- Front teeth -->
+      <rect x="47" y="65" width="6" height="3" fill="#fff" rx="0.5"/>
+      <line x1="50" y1="65" x2="50" y2="68" stroke="#d8c0a0" stroke-width="0.3"/>
+      <!-- Slight smile -->
+      <path d="M44,66 Q50,70 56,66" fill="none" stroke="#a04030" stroke-width="0.8"/>
+      <!-- Gryffindor scarf -->
+      <path d="M30,80 Q50,85 70,80 L72,95 L28,95 Z" fill="#ae0001"/>
+      <line x1="40" y1="82" x2="40" y2="95" stroke="#d4a843" stroke-width="1"/>
+      <line x1="60" y1="82" x2="60" y2="95" stroke="#d4a843" stroke-width="1"/>
+    </svg>`,
+    ron: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <defs><radialGradient id="ronBg" cx="50%" cy="40%"><stop offset="0%" stop-color="#3a1a1a"/><stop offset="100%" stop-color="#1a0a0a"/></radialGradient></defs>
+      <rect width="100" height="100" fill="url(#ronBg)"/>
+      <!-- Red Weasley hair -->
+      <path d="M30,28 Q50,15 70,28 Q72,42 68,50 Q60,38 50,38 Q40,38 32,50 Q28,42 30,28" fill="#c8401a"/>
+      <path d="M30,30 Q35,25 40,30" fill="#e85020"/>
+      <path d="M60,30 Q65,25 70,30" fill="#e85020"/>
+      <!-- Face with freckles -->
+      <ellipse cx="50" cy="55" rx="17" ry="19" fill="#f0c898"/>
+      <circle cx="43" cy="58" r="0.6" fill="#a05030"/>
+      <circle cx="46" cy="60" r="0.5" fill="#a05030"/>
+      <circle cx="54" cy="60" r="0.5" fill="#a05030"/>
+      <circle cx="57" cy="58" r="0.6" fill="#a05030"/>
+      <circle cx="50" cy="62" r="0.5" fill="#a05030"/>
+      <!-- Eyes -->
+      <ellipse cx="43" cy="54" rx="1.8" ry="1.3" fill="#3a7bdc"/>
+      <ellipse cx="57" cy="54" rx="1.8" ry="1.3" fill="#3a7bdc"/>
+      <!-- Big grin -->
+      <path d="M42,66 Q50,72 58,66" fill="none" stroke="#8b1a1a" stroke-width="1.2" stroke-linecap="round"/>
+      <!-- Long nose -->
+      <path d="M50,55 L48,62 L52,62 Z" fill="#d8a878"/>
+      <!-- Gryffindor scarf -->
+      <path d="M30,80 Q50,85 70,80 L72,95 L28,95 Z" fill="#ae0001"/>
+      <line x1="40" y1="82" x2="40" y2="95" stroke="#d4a843" stroke-width="1"/>
+      <line x1="60" y1="82" x2="60" y2="95" stroke="#d4a843" stroke-width="1"/>
+    </svg>`,
+    harry: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <defs><radialGradient id="hryBg" cx="50%" cy="40%"><stop offset="0%" stop-color="#1a1a3a"/><stop offset="100%" stop-color="#0a0a1a"/></radialGradient></defs>
+      <rect width="100" height="100" fill="url(#hryBg)"/>
+      <!-- Messy black hair -->
+      <path d="M28,32 Q35,18 50,22 Q65,18 72,32 Q70,42 65,40 Q58,32 50,34 Q42,32 35,40 Q30,42 28,32" fill="#0a0a0a"/>
+      <path d="M40,28 L42,38" stroke="#0a0a0a" stroke-width="2"/>
+      <path d="M60,28 L58,38" stroke="#0a0a0a" stroke-width="2"/>
+      <!-- Face -->
+      <ellipse cx="50" cy="55" rx="16" ry="19" fill="#e8c8a0"/>
+      <!-- Lightning scar -->
+      <path d="M44,40 L46,44 L43,46 L46,50" fill="none" stroke="#8b1a1a" stroke-width="1.3" stroke-linecap="round"/>
+      <!-- Round glasses -->
+      <circle cx="43" cy="54" r="5" fill="none" stroke="#1a1a1a" stroke-width="1.2"/>
+      <circle cx="57" cy="54" r="5" fill="none" stroke="#1a1a1a" stroke-width="1.2"/>
+      <line x1="48" y1="54" x2="52" y2="54" stroke="#1a1a1a" stroke-width="1"/>
+      <!-- Green eyes -->
+      <circle cx="43" cy="54" r="1.3" fill="#1a8a4a"/>
+      <circle cx="57" cy="54" r="1.3" fill="#1a8a4a"/>
+      <!-- Slight smile -->
+      <path d="M45,67 Q50,70 55,67" fill="none" stroke="#8b1a1a" stroke-width="0.8"/>
+      <!-- Gryffindor scarf -->
+      <path d="M30,80 Q50,85 70,80 L72,95 L28,95 Z" fill="#ae0001"/>
+      <line x1="40" y1="82" x2="40" y2="95" stroke="#d4a843" stroke-width="1"/>
+      <line x1="60" y1="82" x2="60" y2="95" stroke="#d4a843" stroke-width="1"/>
+    </svg>`,
+    draco: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <defs><radialGradient id="drcBg" cx="50%" cy="40%"><stop offset="0%" stop-color="#1a2a1a"/><stop offset="100%" stop-color="#050a05"/></radialGradient></defs>
+      <rect width="100" height="100" fill="url(#drcBg)"/>
+      <!-- Slicked back platinum blonde hair -->
+      <path d="M30,32 Q50,20 70,32 Q72,38 68,42 Q60,32 50,32 Q40,32 32,42 Q28,38 30,32" fill="#f0e8d0"/>
+      <path d="M32,32 Q50,28 68,32" stroke="#d8d0b8" stroke-width="0.5"/>
+      <!-- Pale face -->
+      <ellipse cx="50" cy="55" rx="16" ry="19" fill="#e8e0d0"/>
+      <!-- Sharp pointed features -->
+      <path d="M50,52 L48,62 L52,62 Z" fill="#d8d0c0"/>
+      <!-- Cold gray eyes -->
+      <ellipse cx="43" cy="53" rx="1.8" ry="1.2" fill="#6a7080"/>
+      <ellipse cx="57" cy="53" rx="1.8" ry="1.2" fill="#6a7080"/>
+      <!-- Smirk -->
+      <path d="M44,68 Q50,66 56,69" fill="none" stroke="#5a3030" stroke-width="0.8"/>
+      <!-- Pointed eyebrows -->
+      <path d="M38,48 L46,46" stroke="#c8c0a8" stroke-width="0.8"/>
+      <path d="M54,46 L62,48" stroke="#c8c0a8" stroke-width="0.8"/>
+      <!-- Slytherin tie -->
+      <path d="M44,80 L56,80 L58,95 L42,95 Z" fill="#2a623d"/>
+      <line x1="46" y1="82" x2="46" y2="95" stroke="#888888" stroke-width="0.5"/>
+      <line x1="54" y1="82" x2="54" y2="95" stroke="#888888" stroke-width="0.5"/>
+      <!-- Robe collar -->
+      <path d="M28,80 L42,80 L40,90 L28,95 Z" fill="#0a0a0a"/>
+      <path d="M58,80 L72,80 L72,95 L60,90 Z" fill="#0a0a0a"/>
+    </svg>`,
+    luna: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <defs><radialGradient id="lnaBg" cx="50%" cy="40%"><stop offset="0%" stop-color="#1a2a4a"/><stop offset="100%" stop-color="#0a0a2a"/></radialGradient></defs>
+      <rect width="100" height="100" fill="url(#lnaBg)"/>
+      <!-- Long wavy blonde hair -->
+      <path d="M22,30 Q18,60 25,90 Q32,80 30,55 Q34,35 50,25 Q66,35 70,55 Q68,80 75,90 Q82,60 78,30 Q50,15 22,30" fill="#f0e8b0"/>
+      <path d="M28,40 Q26,60 30,80" stroke="#d8c898" stroke-width="0.5" fill="none"/>
+      <path d="M70,40 Q74,60 70,80" stroke="#d8c898" stroke-width="0.5" fill="none"/>
+      <!-- Face (dreamy) -->
+      <ellipse cx="50" cy="55" rx="15" ry="18" fill="#f0d8b8"/>
+      <!-- Wide silver eyes -->
+      <ellipse cx="43" cy="53" rx="2.2" ry="1.8" fill="#a8c0d0"/>
+      <ellipse cx="57" cy="53" rx="2.2" ry="1.8" fill="#a8c0d0"/>
+      <circle cx="43.3" cy="52.7" r="0.5" fill="#fff"/>
+      <circle cx="57.3" cy="52.7" r="0.5" fill="#fff"/>
+      <!-- Dreamy smile -->
+      <path d="M44,67 Q50,70 56,67" fill="none" stroke="#a04030" stroke-width="0.8"/>
+      <!-- Radish earrings -->
+      <ellipse cx="32" cy="62" rx="2" ry="3" fill="#e85040"/>
+      <path d="M32,58 L31,55 M32,58 L33,55" stroke="#1a8a4a" stroke-width="0.5"/>
+      <ellipse cx="68" cy="62" rx="2" ry="3" fill="#e85040"/>
+      <path d="M68,58 L67,55 M68,58 L69,55" stroke="#1a8a4a" stroke-width="0.5"/>
+      <!-- Butterbeer cork necklace -->
+      <circle cx="50" cy="78" r="1.5" fill="#d4a843"/>
+      <line x1="44" y1="76" x2="56" y2="76" stroke="#8b6a3a" stroke-width="0.5"/>
+      <!-- Ravenclaw collar -->
+      <path d="M28,82 Q50,86 72,82 L72,95 L28,95 Z" fill="#7cb3e8"/>
+    </svg>`,
+    dobby: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <defs><radialGradient id="dbyBg" cx="50%" cy="40%"><stop offset="0%" stop-color="#2a2a1a"/><stop offset="100%" stop-color="#0a0a05"/></radialGradient></defs>
+      <rect width="100" height="100" fill="url(#dbyBg)"/>
+      <!-- Big bald head -->
+      <ellipse cx="50" cy="50" rx="28" ry="32" fill="#d8c0a0"/>
+      <!-- Massive ears -->
+      <path d="M22,45 Q10,35 12,55 Q14,65 25,60 Z" fill="#d8c0a0" stroke="#a89070" stroke-width="0.5"/>
+      <path d="M78,45 Q90,35 88,55 Q86,65 75,60 Z" fill="#d8c0a0" stroke="#a89070" stroke-width="0.5"/>
+      <!-- Inner ears -->
+      <path d="M18,48 Q14,52 18,58" stroke="#a87060" stroke-width="0.8" fill="none"/>
+      <path d="M82,48 Q86,52 82,58" stroke="#a87060" stroke-width="0.8" fill="none"/>
+      <!-- Huge tennis-ball eyes -->
+      <ellipse cx="40" cy="48" rx="7" ry="8" fill="#fff"/>
+      <ellipse cx="60" cy="48" rx="7" ry="8" fill="#fff"/>
+      <circle cx="40" cy="49" r="3.5" fill="#3a8a4a"/>
+      <circle cx="60" cy="49" r="3.5" fill="#3a8a4a"/>
+      <circle cx="40" cy="49" r="1.8" fill="#0a0a0a"/>
+      <circle cx="60" cy="49" r="1.8" fill="#0a0a0a"/>
+      <circle cx="40.5" cy="48" r="0.8" fill="#fff"/>
+      <circle cx="60.5" cy="48" r="0.8" fill="#fff"/>
+      <!-- Long pointy nose -->
+      <path d="M50,52 L46,68 L54,68 Z" fill="#c8a888"/>
+      <!-- Wide smile -->
+      <path d="M40,73 Q50,80 60,73" fill="none" stroke="#5a2a1a" stroke-width="1.2" stroke-linecap="round"/>
+      <!-- Pillowcase clothing -->
+      <path d="M30,85 Q50,82 70,85 L72,95 L28,95 Z" fill="#d4c8a8"/>
+      <path d="M40,90 L42,93 M55,90 L58,93" stroke="#8b7050" stroke-width="0.4"/>
+    </svg>`,
+    filch: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <defs><radialGradient id="flcBg" cx="50%" cy="40%"><stop offset="0%" stop-color="#2a1a0a"/><stop offset="100%" stop-color="#0a0500"/></radialGradient></defs>
+      <rect width="100" height="100" fill="url(#flcBg)"/>
+      <!-- Stringy gray hair -->
+      <path d="M28,32 Q50,22 72,32 L72,42 L65,38 Q58,40 50,38 Q42,40 35,38 L28,42 Z" fill="#6a6a5a"/>
+      <path d="M30,40 L28,55 M70,40 L72,55" stroke="#5a5a4a" stroke-width="1"/>
+      <!-- Gaunt face -->
+      <ellipse cx="50" cy="58" rx="16" ry="20" fill="#c8b098"/>
+      <!-- Sunken cheeks -->
+      <ellipse cx="38" cy="65" rx="3" ry="5" fill="#a89078"/>
+      <ellipse cx="62" cy="65" rx="3" ry="5" fill="#a89078"/>
+      <!-- Beady angry eyes -->
+      <ellipse cx="42" cy="55" rx="1.5" ry="1" fill="#1a1a1a"/>
+      <ellipse cx="58" cy="55" rx="1.5" ry="1" fill="#1a1a1a"/>
+      <!-- Bushy eyebrows -->
+      <path d="M37,50 Q42,46 47,51" stroke="#5a5a4a" stroke-width="1.5" fill="none"/>
+      <path d="M53,51 Q58,46 63,50" stroke="#5a5a4a" stroke-width="1.5" fill="none"/>
+      <!-- Hooked nose -->
+      <path d="M50,55 L46,67 L52,68 Z" fill="#a89078"/>
+      <!-- Frown -->
+      <path d="M42,75 Q50,72 58,75" fill="none" stroke="#3a1a1a" stroke-width="1"/>
+      <!-- Tattered collar -->
+      <path d="M28,82 L72,82 L72,95 L28,95 Z" fill="#3a2a1a"/>
+    </svg>`,
+  };
+  return portraits[id] || `<svg viewBox="0 0 100 100"><rect width="100" height="100" fill="#1a1030"/><text x="50" y="60" text-anchor="middle" font-size="40" fill="#d4a843">?</text></svg>`;
+}
+
 const NPCS = {
   dumbledore: { name: '鄧不利多', title: '霍格華茲校長', avatar: '🧙‍♂️' },
   mcgonagall: { name: '麥教授', title: '變形學教授 / 副校長', avatar: '🐱' },
@@ -2040,7 +2361,7 @@ function openDialogue(dialogueId) {
   if (!dlg) return;
   const npc = NPCS[dlg.npc];
   const overlay = document.getElementById('dialogueOverlay');
-  document.getElementById('dlgAvatar').textContent = npc.avatar;
+  document.getElementById('dlgAvatar').innerHTML = npcPortrait(dlg.npc);
   document.getElementById('dlgName').textContent = npc.name;
   document.getElementById('dlgTitle').textContent = npc.title;
   document.getElementById('dlgText').innerHTML = dlg.text;
