@@ -1097,6 +1097,90 @@ html, body {
   cursor: pointer;
 }
 
+/* ============ NPC DIALOGUE MODAL ============ */
+.dialogue-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 150;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.dialogue-overlay.active { opacity: 1; pointer-events: all; }
+
+.dialogue-box {
+  background: linear-gradient(180deg, #1a1030 0%, #0f0a1a 100%);
+  border: 1px solid rgba(212,168,67,0.3);
+  width: 100%; max-width: 680px;
+  max-height: 55vh;
+  display: flex; flex-direction: column;
+  box-shadow: 0 -4px 40px rgba(0,0,0,0.5);
+  transform: translateY(20px);
+  transition: transform 0.3s ease;
+}
+.dialogue-overlay.active .dialogue-box { transform: translateY(0); }
+
+.dialogue-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(212,168,67,0.15);
+}
+.dialogue-avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  border: 2px solid var(--gold-dark);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; background: rgba(255,255,255,0.04); flex-shrink: 0;
+}
+.dialogue-name { font-family: 'Noto Serif TC', serif; font-weight: 700; font-size: 15px; color: var(--gold); }
+.dialogue-title { font-size: 11px; color: var(--parchment-dark); }
+
+.dialogue-body { padding: 18px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.dialogue-text { font-family: 'Noto Serif TC', serif; font-size: 15px; line-height: 1.9; color: var(--parchment); }
+
+.dialogue-choices {
+  padding: 12px 18px 16px;
+  display: flex; flex-direction: column; gap: 8px;
+  border-top: 1px solid rgba(212,168,67,0.1);
+}
+.dialogue-choice-btn {
+  font-family: 'Noto Sans TC', sans-serif; font-size: 13px;
+  color: var(--parchment); background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(212,168,67,0.15);
+  padding: 10px 14px; cursor: pointer; transition: all 0.3s ease; text-align: left;
+}
+.dialogue-choice-btn:hover { border-color: var(--gold); background: rgba(212,168,67,0.1); color: var(--gold); }
+.dialogue-choice-btn .req-tag {
+  display: inline-block; font-size: 10px; padding: 1px 6px;
+  border: 1px solid rgba(212,168,67,0.3); color: var(--gold-dark); margin-left: 6px;
+}
+
+/* ============ CHAPTER BANNER ============ */
+.chapter-banner {
+  position: fixed; inset: 0; z-index: 180;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: rgba(5,5,16,0.95);
+  opacity: 0; pointer-events: none; transition: opacity 0.6s ease;
+}
+.chapter-banner.active { opacity: 1; pointer-events: all; }
+.chapter-num { font-family: 'Cinzel', serif; font-size: clamp(11px,1.5vw,13px); letter-spacing: 0.5em; color: var(--gold-dark); margin-bottom: 12px; }
+.chapter-title { font-family: 'Noto Serif TC', serif; font-weight: 900; font-size: clamp(22px,4vw,40px); color: var(--gold); text-align: center; margin-bottom: 8px; }
+.chapter-subtitle { font-family: 'Noto Sans TC', sans-serif; font-size: clamp(12px,1.5vw,15px); color: var(--parchment-dark); }
+
+/* ============ SCENE TRANSITION ============ */
+.scene-transition { position: absolute; inset: 0; background: var(--midnight); z-index: 30; opacity: 0; pointer-events: none; transition: opacity 0.35s ease; }
+.scene-transition.active { opacity: 1; }
+
+/* ============ RELATIONSHIP INDICATOR ============ */
+.relationship-list { display: flex; flex-direction: column; gap: 6px; }
+.rel-row { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.rel-avatar { font-size: 16px; width: 22px; text-align: center; }
+.rel-name { color: var(--parchment-dark); flex: 1; }
+.rel-hearts { color: #c83030; font-size: 10px; letter-spacing: 2px; }
+
 /* ============ MUSIC TOGGLE ============ */
 .music-toggle {
   position: fixed;
@@ -1168,6 +1252,30 @@ html, body {
 <canvas id="starfield"></canvas>
 <div class="spell-flash" id="spellFlash"></div>
 <div class="toast" id="toast"></div>
+
+<!-- NPC Dialogue Modal -->
+<div class="dialogue-overlay" id="dialogueOverlay">
+  <div class="dialogue-box">
+    <div class="dialogue-header">
+      <div class="dialogue-avatar" id="dlgAvatar">🧙</div>
+      <div>
+        <div class="dialogue-name" id="dlgName">NPC</div>
+        <div class="dialogue-title" id="dlgTitle">教授</div>
+      </div>
+    </div>
+    <div class="dialogue-body">
+      <div class="dialogue-text" id="dlgText"></div>
+    </div>
+    <div class="dialogue-choices" id="dlgChoices"></div>
+  </div>
+</div>
+
+<!-- Chapter Banner -->
+<div class="chapter-banner" id="chapterBanner">
+  <div class="chapter-num" id="chapterNum">Chapter I</div>
+  <div class="chapter-title" id="chapterTitle">開學典禮</div>
+  <div class="chapter-subtitle" id="chapterSub"></div>
+</div>
 
 <!-- Music Toggle -->
 <button class="music-toggle" id="musicToggle" onclick="toggleMusic()" title="背景音樂">
@@ -1356,9 +1464,15 @@ html, body {
         <div class="panel-section-title">已學咒語</div>
         <div class="spell-list" id="spellList"></div>
       </div>
+
+      <div>
+        <div class="panel-section-title">人際關係</div>
+        <div class="relationship-list" id="relationshipList"></div>
+      </div>
     </div>
 
     <div class="center-scene">
+      <div class="scene-transition" id="sceneTransition"></div>
       <div class="scene-viewport">
         <div class="scene-bg">
           <div class="scene-art" id="sceneArt"></div>
@@ -1658,6 +1772,319 @@ const canvas = document.getElementById('starfield');
 const ctx = canvas.getContext('2d');
 let stars = [];
 
+// ============ NPC DATABASE ============
+const NPCS = {
+  dumbledore: { name: '鄧不利多', title: '霍格華茲校長', avatar: '🧙‍♂️' },
+  mcgonagall: { name: '麥米奈娃', title: '變形學教授 / 副校長', avatar: '🐱' },
+  snape: { name: '石內卜', title: '魔藥學教授', avatar: '🖤' },
+  hagrid: { name: '海格', title: '獵場看守人', avatar: '🧔' },
+  lupin: { name: '路平', title: '黑魔法防禦術教授', avatar: '🐺' },
+  hermione: { name: '妙麗', title: '葛萊分多學生', avatar: '📚' },
+  ron: { name: '榮恩', title: '葛萊分多學生', avatar: '♟️' },
+  harry: { name: '哈利', title: '葛萊分多學生', avatar: '⚡' },
+  draco: { name: '馬份', title: '史萊哲林學生', avatar: '🐍' },
+  luna: { name: '露娜', title: '雷文克勞學生', avatar: '🌙' },
+  dobby: { name: '多比', title: '自由的家庭小精靈', avatar: '🧦' },
+  filch: { name: '乾七', title: '管理員', avatar: '🐈' },
+};
+
+// ============ RELATIONSHIP SYSTEM ============
+const Relationships = {
+  dumbledore: 2, mcgonagall: 1, snape: 0, hagrid: 1,
+  lupin: 0, hermione: 1, ron: 1, harry: 1,
+  draco: -1, luna: 0, dobby: 0,
+};
+
+function changeRelation(npcId, amount) {
+  if (Relationships[npcId] !== undefined) {
+    Relationships[npcId] = Math.max(-3, Math.min(5, Relationships[npcId] + amount));
+    const npc = NPCS[npcId];
+    const arrow = amount > 0 ? '↑' : '↓';
+    logMessage(`${npc.name} 的好感度 ${arrow}`);
+  }
+}
+
+function renderRelationships() {
+  const el = document.getElementById('relationshipList');
+  if (!el) return;
+  el.innerHTML = '';
+  const shown = ['dumbledore','snape','hagrid','hermione','harry','luna','draco'];
+  shown.forEach(id => {
+    const npc = NPCS[id];
+    const val = Relationships[id] || 0;
+    let hearts = '';
+    if (val >= 4) hearts = '❤️❤️❤️';
+    else if (val >= 2) hearts = '❤️❤️🤍';
+    else if (val >= 1) hearts = '❤️🤍🤍';
+    else if (val === 0) hearts = '🤍🤍🤍';
+    else if (val === -1) hearts = '💔🤍🤍';
+    else hearts = '💔💔🤍';
+    const div = document.createElement('div');
+    div.className = 'rel-row';
+    div.innerHTML = `<span class="rel-avatar">${npc.avatar}</span><span class="rel-name">${npc.name}</span><span class="rel-hearts">${hearts}</span>`;
+    el.appendChild(div);
+  });
+}
+
+// ============ CHAPTER / STORY SYSTEM ============
+const StoryState = {
+  chapter: 1,
+  mainQuestStep: 0,
+  // Flags for story branching
+  knowsAboutForest: false,
+  helpedDobby: false,
+  trustedSnape: false,
+  foundHorcrux: false,
+  alliedWithDraco: false,
+  learnedTruth: false,
+  ending: null,
+};
+
+const CHAPTERS = [
+  { num: 'I',   title: '霍格華茲的來信', sub: '歡迎來到魔法世界' },
+  { num: 'II',  title: '禁忌森林的陰影', sub: '黑暗的力量在甦醒' },
+  { num: 'III', title: '密室的秘密', sub: '追尋湯姆·瑞斗的足跡' },
+  { num: 'IV',  title: '最終的選擇', sub: '你的決定將改變一切' },
+];
+
+function showChapter(chapterIndex) {
+  const ch = CHAPTERS[chapterIndex];
+  if (!ch) return;
+  StoryState.chapter = chapterIndex + 1;
+  const banner = document.getElementById('chapterBanner');
+  document.getElementById('chapterNum').textContent = `Chapter ${ch.num}`;
+  document.getElementById('chapterTitle').textContent = ch.title;
+  document.getElementById('chapterSub').textContent = ch.sub;
+  banner.classList.add('active');
+  setTimeout(() => banner.classList.remove('active'), 3500);
+}
+
+// ============ DIALOGUE ENGINE ============
+const DIALOGUES = {
+  // --- CHAPTER 1 Dialogues ---
+  dumbledore_welcome: {
+    npc: 'dumbledore',
+    text: '鄧不利多校長透過半月形眼鏡注視著你，藍色眼眸閃爍著智慧的光芒。<br><br>「歡迎來到霍格華茲。記住，在這所學校裡，<em>是我們的選擇，而非我們的能力，決定了我們是什麼樣的人。</em>好好享受這段旅程吧。」',
+    choices: [
+      { text: '「謝謝您，校長。我會努力的。」', action: () => { changeRelation('dumbledore', 1); addXP(10); }, next: null },
+      { text: '「校長，學校裡是不是發生了什麼事？」', action: () => { changeRelation('dumbledore', 1); }, next: 'dumbledore_hint' },
+    ]
+  },
+  dumbledore_hint: {
+    npc: 'dumbledore',
+    text: '鄧不利多的表情變得嚴肅了一瞬，隨即恢復和藹的微笑。<br><br>「霍格華茲一直都是安全的⋯但黑暗的力量從未真正消失。你若在禁忌森林或地下城中發現了什麼不尋常的事，記得來找我。」<br><br>他從口袋裡取出一顆<span class="highlight">檸檬雪寶</span>遞給你。',
+    choices: [
+      { text: '收下檸檬雪寶並告退', action: () => { addItem('candy', '檸檬雪寶', '🍬', 1); addXP(15); StoryState.mainQuestStep = 1; showToast('📜 主線任務更新：調查黑暗力量的線索'); }, next: null },
+    ]
+  },
+  hermione_library: {
+    npc: 'hermione',
+    text: '妙麗正埋首於一堆書本之中，看到你走過來，她抬起頭。<br><br>「嗨！你也在準備考試嗎？⋯不對，你看起來不太像。你在找什麼？」',
+    choices: [
+      { text: '「我在調查學校裡的異常事件。」', req: () => StoryState.mainQuestStep >= 1, action: () => { changeRelation('hermione', 1); }, next: 'hermione_help' },
+      { text: '「教我幾個實用的咒語吧！」', action: () => { changeRelation('hermione', 1); }, next: 'hermione_teach' },
+      { text: '「只是來看看書。」', action: () => {}, next: null },
+    ]
+  },
+  hermione_help: {
+    npc: 'hermione',
+    text: '妙麗壓低聲音，表情嚴肅起來。<br><br>「我也注意到了⋯圖書館禁書區裡少了幾本關於<span class="highlight">分靈體</span>的書。而且——」她左右張望，「我在地下城的牆上發現了奇怪的蛇形標記。你覺得會不會跟<em>那個人</em>有關？」',
+    choices: [
+      { text: '「分靈體？那是什麼？」', action: () => { StoryState.mainQuestStep = 2; addXP(20); showToast('📜 主線任務更新：調查分靈體的秘密'); }, next: 'hermione_horcrux' },
+      { text: '「我去地下城看看那些標記。」', action: () => { StoryState.mainQuestStep = 2; GameState.flags.snakeMarks = true; addXP(15); }, next: null },
+    ]
+  },
+  hermione_horcrux: {
+    npc: 'hermione',
+    text: '妙麗翻開一本厚重的書。<br><br>「分靈體是最邪惡的黑魔法⋯把靈魂撕裂藏在物品裡。佛地魔——對，<em>那個人</em>——曾經製造過多個分靈體。」<br><br>她指著一段文字：「如果有人試圖在霍格華茲尋找或製造分靈體⋯這就解釋了那些奇怪的事。你應該去找<span class="highlight">石內卜教授</span>或<span class="highlight">海格</span>打聽更多線索。」',
+    choices: [
+      { text: '「我去找石內卜教授。」', action: () => { addXP(10); }, next: null },
+      { text: '「海格可能知道些什麼。」', action: () => { addXP(10); }, next: null },
+    ]
+  },
+  hermione_teach: {
+    npc: 'hermione',
+    text: '妙麗興奮地打開了一本咒語書。<br><br>「這是我最喜歡的一章！」她指著一頁，清了清嗓子。「試試這個——」<br><br>在妙麗的耐心指導下，你練習了好一陣子。',
+    choices: [
+      { text: '努力學習', action: () => { GameState.int += 1; addXP(20); changeRelation('hermione', 1); showToast('📖 妙麗的指導讓你智力 +1'); }, next: null },
+    ]
+  },
+  snape_confront: {
+    npc: 'snape',
+    text: '石內卜教授從陰影中現身，黑色長袍在身後翻飛。冰冷的目光審視著你。<br><br>「在地下城閒逛？」他的聲音像絲綢一樣滑順而危險。「十分⋯從你的學院扣掉。」<br><br>他頓了頓，似乎在考慮什麼。「除非⋯你能告訴我，你在這裡找什麼？」',
+    choices: [
+      { text: '「我在調查牆上的蛇形標記。」（誠實）', req: () => GameState.flags.snakeMarks, action: () => { changeRelation('snape', 2); StoryState.trustedSnape = true; }, next: 'snape_trust' },
+      { text: '「只是路過⋯對不起，教授。」', action: () => { changeRelation('snape', -1); }, next: 'snape_dismiss' },
+      { text: '「你為什麼總是出現在可疑的地方？」（質問）', action: () => { changeRelation('snape', -2); }, next: 'snape_angry' },
+    ]
+  },
+  snape_trust: {
+    npc: 'snape',
+    text: '石內卜的表情沒有變化，但眼中閃過一絲複雜的光芒。<br><br>「⋯有人在利用學校的暗道進行黑魔法儀式。我一直在追查，但需要⋯」他幾乎是痛苦地說出這個詞，「需要幫助。」<br><br>他從長袍中抽出一本破舊的筆記本遞給你。「這是關於分靈體防禦的筆記。<em>不要</em>告訴任何人是我給你的。」',
+    choices: [
+      { text: '收下筆記本（信任石內卜）', action: () => { addItem('notebook', '石內卜的筆記本', '📓', 1); GameState.def += 2; addXP(40); StoryState.mainQuestStep = 3; showToast('📜 主線任務更新：與石內卜結盟'); }, next: null },
+    ]
+  },
+  snape_dismiss: {
+    npc: 'snape',
+    text: '「走吧。」石內卜冷冷地說，轉身消失在走廊盡頭。<br><br>你注意到他離開的方向⋯是通往禁書區。',
+    choices: [
+      { text: '離開', action: () => {}, next: null },
+    ]
+  },
+  snape_angry: {
+    npc: 'snape',
+    text: '石內卜的臉色瞬間變得鐵青。<br><br>「你⋯竟敢⋯」他低聲說道，聲音裡帶著危險的平靜。「二十分。從你的學院扣掉。出去。<em>立刻</em>。」<br><br>他甩袖離去，長袍在空氣中發出銳利的聲響。',
+    choices: [
+      { text: '灰溜溜地離開', action: () => { GameState.gold = Math.max(0, GameState.gold - 10); }, next: null },
+    ]
+  },
+  luna_stars: {
+    npc: 'luna',
+    text: '露娜躺在天文塔的地板上，望著滿天星斗，蘿蔔耳環在微風中輕輕搖晃。<br><br>「你看到了嗎？」她用夢幻般的語氣說。「星星在改變排列⋯彷彿在警告我們什麼。小精靈們說，黑暗即將降臨。」<br><br>她轉頭看你，出奇認真地說：「不過別擔心。只要我們在一起，連嘶嘶蜂都不敢靠近。」',
+    choices: [
+      { text: '「你相信那些傳說嗎？」', action: () => { changeRelation('luna', 1); }, next: 'luna_believe' },
+      { text: '和她一起安靜地看星星', action: () => { changeRelation('luna', 2); GameState.hp = Math.min(GameState.maxHp, GameState.hp + 15); GameState.mana = Math.min(GameState.maxMana, GameState.mana + 15); showToast('🌙 寧靜的時光。血量+15, 魔力+15'); addXP(10); }, next: null },
+    ]
+  },
+  luna_believe: {
+    npc: 'luna',
+    text: '露娜微笑了，像月光一樣溫柔。<br><br>「信不信都沒關係。重要的是保持開放的心⋯有些真實的東西，眼睛是看不見的。」<br><br>她從口袋裡拿出一副奇怪的眼鏡遞給你。「戴上這個看看？」<br><br>透過鏡片，你看到空氣中漂浮著無數細小的光點⋯原來魔法無所不在。',
+    choices: [
+      { text: '收下眼鏡並感謝露娜', action: () => { addItem('specs', '測奸器眼鏡', '👓', 1); GameState.int += 1; addXP(20); changeRelation('luna', 1); showToast('👓 獲得測奸器眼鏡！智力+1'); }, next: null },
+    ]
+  },
+  dobby_encounter: {
+    npc: 'dobby',
+    text: '一個小小的身影突然從牆角竄出，差點撞到你的腿。是一隻家庭小精靈，穿著不成套的襪子，大眼睛裡充滿淚水。<br><br>「多比⋯多比有重要的事要告訴你！」他結結巴巴地說。「有壞人⋯壞人在學校的深處做壞事！多比不能說是誰⋯但多比可以帶你去看！」',
+    choices: [
+      { text: '「帶我去看看，多比。」', action: () => { changeRelation('dobby', 2); StoryState.helpedDobby = true; StoryState.mainQuestStep = Math.max(StoryState.mainQuestStep, 3); }, next: 'dobby_lead' },
+      { text: '「你先冷靜，告訴我更多。」', action: () => { changeRelation('dobby', 1); }, next: 'dobby_info' },
+      { text: '送多比一隻襪子', action: () => { changeRelation('dobby', 3); addXP(15); showToast('🧦 多比感動得哭了！好感度大幅上升'); }, next: 'dobby_info' },
+    ]
+  },
+  dobby_lead: {
+    npc: 'dobby',
+    text: '多比緊張地牽著你的手，沿著一條你從未注意過的走廊前進。在一面看似普通的牆壁前，他用細長的手指敲了三下。<br><br>牆壁緩緩裂開——裡面是一個隱密的房間，地上畫著複雜的黑魔法陣，空氣中瀰漫著不祥的氣息。<br><br>「看⋯」多比顫抖地指著角落。一本黑色日記本躺在那裡，散發著微弱的暗光。',
+    choices: [
+      { text: '拿起黑色日記本', action: () => { addItem('diary', '湯姆·瑞斗的日記', '📕', 1); StoryState.foundHorcrux = true; StoryState.mainQuestStep = 4; addXP(50); showToast('📕 發現了湯姆·瑞斗的日記！這是⋯分靈體？'); if (StoryState.chapter < 3) showChapter(2); }, next: null },
+      { text: '不碰它，先回去報告', action: () => { StoryState.mainQuestStep = 4; addXP(30); showToast('📜 你記住了這個位置，準備向人報告。'); if (StoryState.chapter < 3) showChapter(2); }, next: null },
+    ]
+  },
+  dobby_info: {
+    npc: 'dobby',
+    text: '多比擤了擤鼻子，用袖子擦掉眼淚。<br><br>「多比聽到⋯有人在深夜對著一本舊書說話。那本書⋯會回話！多比很害怕⋯」<br><br>他壓低聲音：「是在地下城最深處⋯那個連乾七先生都不敢去的地方。」',
+    choices: [
+      { text: '「謝謝你，多比。我會去查的。」', action: () => { StoryState.mainQuestStep = Math.max(StoryState.mainQuestStep, 2); addXP(15); GameState.flags.dobbyTip = true; }, next: null },
+    ]
+  },
+  draco_hallway: {
+    npc: 'draco',
+    text: '跩哥·馬份靠在走廊的牆上，身邊是克乃和乖乖兩個跟班。看到你，他嘴角一撇。<br><br>「又是你？」他帶著招牌的嘲諷語氣。不過⋯他看起來比平常更疲憊，眼底隱約有些不安。',
+    choices: [
+      { text: '「馬份，你還好嗎？你看起來不太對勁。」（關心）', action: () => { changeRelation('draco', 2); }, next: 'draco_vulnerable' },
+      { text: '「讓開，馬份。我沒空跟你耗。」', action: () => { changeRelation('draco', -1); }, next: null },
+      { text: '「我知道學校裡在發生什麼事。你知道些什麼？」', req: () => StoryState.mainQuestStep >= 2, action: () => {}, next: 'draco_knows' },
+    ]
+  },
+  draco_vulnerable: {
+    npc: 'draco',
+    text: '馬份的表情裂開了一瞬間——那道防線背後，是一個害怕的少年。<br><br>他迅速恢復冷漠的面具，但聲音輕了下來。「⋯我爸要我做一件事。我不想做，但⋯」<br><br>他搖搖頭。「算了。你幫不了我的。沒人幫得了。」<br><br>但他離開時，悄悄塞了一張紙條到你手中。上面寫著：<em>「七樓走廊，對面的牆壁，走過三次。」</em>',
+    choices: [
+      { text: '收下紙條（通往萬應室的線索）', action: () => { addItem('note', '馬份的紙條', '📝', 1); StoryState.alliedWithDraco = true; addXP(25); changeRelation('draco', 1); showToast('📝 馬份給了你通往萬應室的線索'); }, next: null },
+    ]
+  },
+  draco_knows: {
+    npc: 'draco',
+    text: '馬份的臉色微變，但他迅速掩飾了驚訝。<br><br>「你什麼都不知道。」他冷冷地說。「如果你聰明的話，就別再問了。有些事⋯知道太多只會害死人。」<br><br>他轉身離開，但停頓了一秒。「⋯小心萬應室。」聲音低得幾乎聽不見。',
+    choices: [
+      { text: '記住這個線索', action: () => { addXP(15); GameState.flags.dracoWarning = true; }, next: null },
+    ]
+  },
+  // --- FINAL CHAPTER ---
+  final_choice: {
+    npc: 'dumbledore',
+    text: '鄧不利多站在校長辦公室裡，鳳凰佛客使棲息在他的肩上。桌上擺著你找到的所有線索。<br><br>「你做得很好。」他嚴肅地說。「現在⋯你必須做出選擇。」<br><br>「那本日記裡的黑魔法必須被摧毀。但方法有三⋯每一種都有代價。」',
+    choices: [
+      { text: '「用鳳凰佛客使的眼淚淨化它。」（光明路線）', action: () => { StoryState.ending = 'light'; showChapter(3); }, next: 'ending_light' },
+      { text: '「讓石內卜用黑魔法對抗黑魔法。」（灰色路線）', req: () => StoryState.trustedSnape, action: () => { StoryState.ending = 'grey'; showChapter(3); }, next: 'ending_grey' },
+      { text: '「我要自己面對它。」（勇氣路線）', req: () => GameState.level >= 3, action: () => { StoryState.ending = 'brave'; showChapter(3); }, next: 'ending_brave' },
+    ]
+  },
+  ending_light: {
+    npc: 'dumbledore',
+    text: '鄧不利多微笑了。佛客使飛到日記上方，晶瑩的淚珠滴落在黑暗的封面上。<br><br>一道金色的光芒綻放——日記尖叫著化為灰燼，黑暗的氣息消散了。<br><br>「選擇了最善良的道路，」鄧不利多說。「這需要的不是力量，而是信念。你已經證明了自己。」<br><br><span class="highlight">🌟 結局：黎明之光</span><br>你用純淨的力量淨化了黑魔法，霍格華茲恢復了和平。你的善良感動了所有人，甚至連石內卜教授都罕見地向你點頭致意。',
+    choices: [
+      { text: '✨ 遊戲完成 — 黎明之光', action: () => { addXP(100); showToast('🏆 恭喜通關！結局：黎明之光'); }, next: null },
+    ]
+  },
+  ending_grey: {
+    npc: 'snape',
+    text: '石內卜接過日記，臉上閃過複雜的神情。他低聲唸出一段你聽不懂的咒語——黑暗與黑暗碰撞，房間劇烈震動。<br><br>日記在他手中碎裂，但石內卜的臉色變得慘白。「⋯代價已付。」他平靜地說。<br><br>鄧不利多扶住了他。「賽佛勒斯⋯你不需要一個人承擔。」<br><br><span class="highlight">🌗 結局：灰色黎明</span><br>你選擇了一條務實的道路。石內卜犧牲了一部分自己來摧毀黑魔法。你明白了——善與惡的界線，有時比想像中更模糊。',
+    choices: [
+      { text: '✨ 遊戲完成 — 灰色黎明', action: () => { addXP(100); showToast('🏆 恭喜通關！結局：灰色黎明'); }, next: null },
+    ]
+  },
+  ending_brave: {
+    npc: 'dumbledore',
+    text: '鄧不利多沉默了很久。「⋯這是最危險的選擇。但或許也是最勇敢的。」<br><br>你握緊魔杖，對著日記施放了你學會的所有咒語——破心護擋住了反噬，去去武器走剝離了它的防禦，最後⋯你的乘乘護法化為一道璀璨的光芒，將黑暗徹底驅散。<br><br>「非凡的勇氣。」鄧不利多眼中閃著淚光。「莉莉也會為你驕傲的。」<br><br><span class="highlight">⚔️ 結局：無畏之心</span><br>你用自己的力量戰勝了黑暗。整個霍格華茲都在談論你的壯舉。你不只是一個學生——你是一個真正的巫師。',
+    choices: [
+      { text: '✨ 遊戲完成 — 無畏之心', action: () => { addXP(100); showToast('🏆 恭喜通關！結局：無畏之心'); }, next: null },
+    ]
+  },
+};
+
+// ============ DIALOGUE UI ENGINE ============
+function openDialogue(dialogueId) {
+  const dlg = DIALOGUES[dialogueId];
+  if (!dlg) return;
+  const npc = NPCS[dlg.npc];
+  const overlay = document.getElementById('dialogueOverlay');
+  document.getElementById('dlgAvatar').textContent = npc.avatar;
+  document.getElementById('dlgName').textContent = npc.name;
+  document.getElementById('dlgTitle').textContent = npc.title;
+  document.getElementById('dlgText').innerHTML = dlg.text;
+
+  const choicesEl = document.getElementById('dlgChoices');
+  choicesEl.innerHTML = '';
+  dlg.choices.forEach(c => {
+    // Check requirements
+    if (c.req && !c.req()) return; // hide choices that don't meet requirements
+    const btn = document.createElement('button');
+    btn.className = 'dialogue-choice-btn';
+    btn.innerHTML = c.text;
+    btn.onclick = () => {
+      if (c.action) c.action();
+      if (c.next) {
+        openDialogue(c.next);
+      } else {
+        closeDialogue();
+      }
+      updateUI();
+    };
+    choicesEl.appendChild(btn);
+  });
+  overlay.classList.add('active');
+}
+
+function closeDialogue() {
+  document.getElementById('dialogueOverlay').classList.remove('active');
+}
+
+// ============ SCENE TRANSITION ============
+function loadSceneAnimated(sceneId) {
+  const trans = document.getElementById('sceneTransition');
+  if (trans) {
+    trans.classList.add('active');
+    setTimeout(() => {
+      loadScene(sceneId);
+      setTimeout(() => trans.classList.remove('active'), 50);
+    }, 350);
+  } else {
+    loadScene(sceneId);
+  }
+}
+
 function initStars() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
@@ -1720,6 +2147,7 @@ const GameState = {
     { id: 'book', name: '標準咒語書', icon: '📖', count: 1 },
   ],
   quests: [
+    { id: 'main', title: '⭐ 主線：分靈體之謎', desc: '與校內人物對話，揭開籠罩霍格華茲的黑暗陰謀。', progress: 0 },
     { id: 'q1', title: '分類帽儀式', desc: '接受分類帽的選擇，找到你的學院歸屬。', progress: 100 },
     { id: 'q2', title: '石內卜的魔藥課', desc: '參加賽佛勒斯·石內卜教授的第一堂魔藥學課。', progress: 0 },
     { id: 'q3', title: '海格的邀請', desc: '拜訪魯霸·海格的小屋，了解禁忌森林的秘密。', progress: 0 },
@@ -1772,7 +2200,8 @@ const SCENES = {
     art: 'great_hall',
     narrative: `<span class="highlight">大禮堂</span>的魔法天花板閃爍著千盞浮空蠟燭，映照著頭頂的星空。<span class="highlight">鄧不利多</span>校長坐在教職員長桌的正中央，銀色長鬚在燭光中微微閃動。<span class="highlight">麥米奈娃</span>教授嚴肅地巡視著學院餐桌。差點沒頭的乃乃從你身旁飄過，友善地向你點頭致意。你在霍格華茲的旅程，從這裡開始。`,
     choices: [
-      { text: '探索地窖', scene: 'dungeons', icon: '🕯️' },
+      { text: '與鄧不利多校長交談', action: 'talk_dumbledore', icon: '🧙‍♂️' },
+      { text: '探索地下城', scene: 'dungeons', icon: '🕯️' },
       { text: '前往圖書館', scene: 'library', icon: '📚' },
       { text: '走向中庭', scene: 'courtyard', icon: '🏰' },
       { text: '攀登大階梯', scene: 'staircase', icon: '🪜' },
@@ -1780,10 +2209,11 @@ const SCENES = {
     ]
   },
   dungeons: {
-    location: '地窖',
+    location: '地下城',
     art: 'dungeons',
     narrative: `冰冷的石牆上滲出水珠，你走進了<span class="highlight">地下城</span>。走廊上的火把忽明忽暗，投射出舞動的陰影。<span class="highlight">石內卜</span>教授的魔藥學教室門半開著——裡面的坩堝冒著神秘的泡泡。架子上一瓶<span class="highlight">白鮮液</span>旁邊，有個發光的藥瓶引起了你的注意⋯`,
     choices: [
+      { text: '與石內卜教授對話', action: 'talk_snape', icon: '🖤' },
       { text: '拿起發光的藥瓶', action: 'take_vial', icon: '🧪' },
       { text: '參加魔藥學課', scene: 'potions_class', icon: '⚗️' },
       { text: '調查奇怪的聲音', scene: 'secret_passage', icon: '👂' },
@@ -1795,6 +2225,7 @@ const SCENES = {
     art: 'library',
     narrative: `高聳的書架在頭頂延伸至黑暗中。<span class="highlight">平斯夫人</span>在櫃台後方警惕地注視著每個人。<span class="highlight">圖書館</span>異常安靜——只有羽毛筆的沙沙聲和翻頁的窸窣聲。你瞥見<span class="highlight">妙麗·格蘭傑</span>抱著一疊書匆匆走過。禁書區在天鵝絨繩索後方隱隱發光，閱覽桌上一本書似乎在散發魔法能量。`,
     choices: [
+      { text: '和妙麗交談', action: 'talk_hermione', icon: '📚' },
       { text: '閱讀那本發光的書', action: 'read_book', icon: '📖' },
       { text: '潛入禁書區', scene: 'restricted', icon: '🚫' },
       { text: '研習防禦咒語', action: 'study_defense', icon: '📝' },
@@ -1806,6 +2237,7 @@ const SCENES = {
     art: 'courtyard',
     narrative: `陽光傾灑進開放的<span class="highlight">中庭</span>，溫暖著古老的石磚。<span class="highlight">胡奇夫人</span>正在指導一年級的飛行課，幾把光輪掃帚整齊排列在地上。貓頭鷹在頭頂盤旋送著<span class="highlight">咆哮信</span>。鐘樓上一個穿著黑色斗篷的神秘身影正注視著你。<span class="highlight">跩哥·馬份</span>向你發起了決鬥的挑戰！`,
     choices: [
+      { text: '和跩哥·馬份對峙', action: 'talk_draco', icon: '🐍' },
       { text: '接受決鬥挑戰', scene: 'duel', icon: '⚔️' },
       { text: '調查神秘斗篷人', scene: 'clock_tower', icon: '🕵️' },
       { text: '練習施放咒語', action: 'practice_spells', icon: '✨' },
@@ -1815,9 +2247,10 @@ const SCENES = {
   staircase: {
     location: '大階梯',
     art: 'staircase',
-    narrative: `<span class="highlight">大階梯</span>無盡地向上延伸，被施了魔法的階梯不斷移動和重新排列，發出深沉的隆隆聲。肖像畫中的人物在你經過時竊竊私語——你認出了<span class="highlight">胖夫人</span>守護著葛萊分多的入口。一道階梯突然轉向——通往一條你從未見過的走廊。走廊盡頭，管理員<span class="highlight">飛七</span>的貓「拿樂絲太太」正虎視眈眈地盯著你。`,
+    narrative: `<span class="highlight">大階梯</span>無盡地向上延伸，被施了魔法的階梯不斷移動和重新排列，發出深沉的隆隆聲。肖像畫中的人物在你經過時竊竊私語——你認出了<span class="highlight">胖夫人</span>守護著葛萊分多的入口。一道階梯突然轉向——通往一條你從未見過的走廊。走廊盡頭，管理員<span class="highlight">乾七</span>的貓「乃乃夫人」正虎視眈眈地盯著你。`,
     choices: [
       { text: '回答謎語', action: 'riddle', icon: '🤔' },
+      { text: '一隻小精靈向你跑來⋯', action: 'talk_dobby', icon: '🧦' },
       { text: '跟隨隱藏的走廊', scene: 'hidden_room', icon: '🚪' },
       { text: '前往天文塔', scene: 'astronomy', icon: '🔭' },
       { text: '返回大禮堂', scene: 'great_hall', icon: '↩️' },
@@ -1892,6 +2325,7 @@ const SCENES = {
     art: 'courtyard',
     narrative: `<span class="highlight">天文塔</span>上可以看到壯麗的校園全景。星辰在天空中燦爛閃耀，<span class="highlight">禁忌森林</span>在遠方黑暗而無盡地延伸。透過<span class="highlight">全效望遠鏡</span>，你發現森林中有什麼東西在移動——是人馬<span class="highlight">翡冷翠</span>，他的身影巨大而發出光芒。遠處似乎還能看到一隻<span class="highlight">獨角獸</span>的銀色身影。`,
     choices: [
+      { text: '和露娜聊天', action: 'talk_luna', icon: '🌙' },
       { text: '研究星象尋找線索', action: 'study_stars', icon: '⭐' },
       { text: '向森林方向發出信號', action: 'signal_forest', icon: '🔦' },
       { text: '享受寧靜的夜景', action: 'rest', icon: '🌙' },
@@ -2035,6 +2469,15 @@ function getSceneArt(sceneId) {
 // ============ ACTION HANDLERS ============
 function handleAction(action) {
   const actions = {
+    // ==== DIALOGUE TRIGGERS ====
+    talk_dumbledore: () => { openDialogue('dumbledore_welcome'); },
+    talk_hermione:   () => { openDialogue('hermione_library'); },
+    talk_snape:      () => { openDialogue('snape_confront'); },
+    talk_draco:      () => { openDialogue('draco_hallway'); },
+    talk_luna:       () => { openDialogue('luna_stars'); },
+    talk_dobby:      () => { openDialogue('dobby_encounter'); },
+    talk_finale:     () => { openDialogue('final_choice'); },
+
     take_vial: () => {
       addItem('potion_mana', '魔力恢復劑', '💜', 1);
       showToast('✨ 發現了魔力恢復劑！');
@@ -2370,7 +2813,7 @@ function loadScene(sceneId) {
         handleAction(choice.action);
         loadScene(sceneId);
       } else if (choice.scene) {
-        loadScene(choice.scene);
+        loadSceneAnimated(choice.scene);
       }
     };
     choicesEl.appendChild(btn);
@@ -2417,6 +2860,23 @@ function updateUI() {
 
   const questList = document.getElementById('questList');
   questList.innerHTML = '';
+
+  // Sync main quest with story state
+  const mainQuest = GameState.quests.find(q => q.id === 'main');
+  if (mainQuest) {
+    const stepDescriptions = [
+      '與校內人物對話，揭開籠罩霍格華茲的黑暗陰謀。',
+      '鄧不利多暗示了黑暗的存在。去找線索吧。',
+      '調查地下城的蛇形標記，或詢問石內卜教授。',
+      '你已經找到盟友。前往多比指引的密室。',
+      '你發現了分靈體！前往大禮堂前往最終章。',
+      '你的選擇決定了霍格華茲的命運⋯',
+    ];
+    mainQuest.desc = stepDescriptions[Math.min(StoryState.mainQuestStep, 5)];
+    mainQuest.progress = Math.min(100, StoryState.mainQuestStep * 25);
+    if (StoryState.ending) mainQuest.progress = 100;
+  }
+
   GameState.quests.forEach(q => {
     const div = document.createElement('div');
     div.className = 'quest-item';
@@ -2427,6 +2887,24 @@ function updateUI() {
     `;
     questList.appendChild(div);
   });
+
+  // Render relationships
+  renderRelationships();
+
+  // Show finale option if quest progressed
+  if (StoryState.foundHorcrux && !StoryState.ending && GameState.currentScene === 'great_hall') {
+    const choicesEl = document.getElementById('sceneChoices');
+    if (choicesEl && !document.getElementById('finaleBtn')) {
+      const btn = document.createElement('button');
+      btn.id = 'finaleBtn';
+      btn.className = 'choice-btn';
+      btn.style.borderColor = 'var(--gold)';
+      btn.style.background = 'rgba(212,168,67,0.15)';
+      btn.innerHTML = '<span class="choice-key">⚡</span>前往校長辦公室（最終章）';
+      btn.onclick = () => openDialogue('final_choice');
+      choicesEl.appendChild(btn);
+    }
+  }
 }
 
 // ============ START GAME ============
@@ -2445,6 +2923,8 @@ function startGame() {
   showScreen('game-screen');
   loadScene('great_hall');
   logMessage(`歡迎來到魔法世界，${hd.name}的${name}！`);
+  // Show opening chapter banner
+  setTimeout(() => showChapter(0), 500);
 }
 
 function togglePanel(side) {
